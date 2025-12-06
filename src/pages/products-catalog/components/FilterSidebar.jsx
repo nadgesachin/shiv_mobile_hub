@@ -4,146 +4,138 @@ import Button from '../../../components/ui/Button';
 import { Checkbox } from '../../../components/ui/Checkbox';
 
 const FilterSidebar = ({ filters, onFilterChange, onClearFilters, activeFiltersCount }) => {
-  const handleCheckboxChange = (category, value) => {
-    const currentValues = filters?.[category] || [];
-    const newValues = currentValues?.includes(value)
-      ? currentValues?.filter(v => v !== value)
-      : [...currentValues, value];
-    onFilterChange(category, newValues);
-  };
-
-  const filterSections = [
-    {
-      id: 'category',
-      title: 'Category',
-      icon: 'Grid',
-      options: [
-        { value: 'smartphones', label: 'Smartphones', count: 45 },
-        { value: 'accessories', label: 'Accessories', count: 128 },
-        { value: 'tablets', label: 'Tablets', count: 23 },
-        { value: 'smartwatches', label: 'Smartwatches', count: 34 },
-        { value: 'audio', label: 'Audio Devices', count: 56 },
-      ],
-    },
-    {
-      id: 'brand',
-      title: 'Brand',
-      icon: 'Tag',
-      options: [
-        { value: 'samsung', label: 'Samsung', count: 67 },
-        { value: 'apple', label: 'Apple', count: 45 },
-        { value: 'xiaomi', label: 'Xiaomi', count: 52 },
-        { value: 'oneplus', label: 'OnePlus', count: 34 },
-        { value: 'realme', label: 'Realme', count: 41 },
-        { value: 'oppo', label: 'OPPO', count: 38 },
-      ],
-    },
-    {
-      id: 'priceRange',
-      title: 'Price Range',
-      icon: 'IndianRupee',
-      options: [
-        { value: 'under5k', label: 'Under ₹5,000', count: 89 },
-        { value: '5k-10k', label: '₹5,000 - ₹10,000', count: 76 },
-        { value: '10k-20k', label: '₹10,000 - ₹20,000', count: 54 },
-        { value: '20k-30k', label: '₹20,000 - ₹30,000', count: 43 },
-        { value: 'above30k', label: 'Above ₹30,000', count: 38 },
-      ],
-    },
-    {
-      id: 'features',
-      title: 'Features',
-      icon: 'Sparkles',
-      options: [
-        { value: '5g', label: '5G Support', count: 67 },
-        { value: 'fastCharging', label: 'Fast Charging', count: 89 },
-        { value: 'wireless', label: 'Wireless Charging', count: 34 },
-        { value: 'waterproof', label: 'Water Resistant', count: 45 },
-        { value: 'dualSim', label: 'Dual SIM', count: 102 },
-      ],
-    },
-    {
-      id: 'storage',
-      title: 'Storage',
-      icon: 'HardDrive',
-      options: [
-        { value: '64gb', label: '64GB', count: 45 },
-        { value: '128gb', label: '128GB', count: 78 },
-        { value: '256gb', label: '256GB', count: 56 },
-        { value: '512gb', label: '512GB', count: 23 },
-      ],
-    },
-    {
-      id: 'rating',
-      title: 'Customer Rating',
-      icon: 'Star',
-      options: [
-        { value: '4plus', label: '4★ & Above', count: 156 },
-        { value: '3plus', label: '3★ & Above', count: 234 },
-        { value: '2plus', label: '2★ & Above', count: 278 },
-      ],
-    },
-  ];
-
   return (
     <div className="bg-card rounded-lg border border-border p-6">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-headline font-bold text-foreground flex items-center space-x-2">
-          <Icon name="SlidersHorizontal" size={20} color="var(--color-primary)" />
-          <span>Filters</span>
-        </h2>
+        <h3 className="font-bold text-lg">Filters</h3>
         {activeFiltersCount > 0 && (
-          <Button
-            variant="ghost"
-            size="sm"
-            iconName="X"
-            iconPosition="left"
+          <Button 
+            variant="ghost" 
+            size="sm" 
             onClick={onClearFilters}
+            iconName="RefreshCw"
+            iconPosition="left"
           >
             Clear All
           </Button>
         )}
       </div>
-      {activeFiltersCount > 0 && (
-        <div className="mb-6 p-3 bg-primary/10 rounded-md">
-          <p className="text-sm font-medium text-primary">
-            {activeFiltersCount} filter{activeFiltersCount > 1 ? 's' : ''} applied
-          </p>
-        </div>
-      )}
-      <div className="space-y-6">
-        {filterSections?.map((section) => (
-          <div key={section?.id} className="border-b border-border pb-6 last:border-b-0 last:pb-0">
-            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center space-x-2">
-              <Icon name={section?.icon} size={16} color="var(--color-muted-foreground)" />
-              <span>{section?.title}</span>
-            </h3>
-            <div className="space-y-2">
-              {section?.options?.map((option) => (
-                <label
-                  key={option?.value}
-                  className="flex items-center justify-between cursor-pointer group"
-                >
-                  <div className="flex items-center space-x-2 flex-1">
-                    <Checkbox
-                      checked={(filters?.[section?.id] || [])?.includes(option?.value)}
-                      onChange={() => handleCheckboxChange(section?.id, option?.value)}
-                    />
-                    <span className="text-sm text-foreground group-hover:text-primary transition-smooth">
-                      {option?.label}
-                    </span>
-                  </div>
-                  <span className="text-xs text-muted-foreground">({option?.count})</span>
-                </label>
-              ))}
+
+      {/* Price Range */}
+      <div className="mb-6">
+        <h4 className="font-semibold mb-3 text-sm">Price Range</h4>
+        <div className="space-y-2">
+          {[
+            { id: 'under-10000', label: 'Under ₹10,000', value: [0, 10000] },
+            { id: '10000-20000', label: '₹10,000 - ₹20,000', value: [10000, 20000] },
+            { id: '20000-40000', label: '₹20,000 - ₹40,000', value: [20000, 40000] },
+            { id: '40000-60000', label: '₹40,000 - ₹60,000', value: [40000, 60000] },
+            { id: 'above-60000', label: 'Above ₹60,000', value: [60000, Infinity] }
+          ].map((range) => (
+            <div key={range.id} className="flex items-center">
+              <input
+                type="checkbox"
+                id={range.id}
+                checked={filters.price === range.value}
+                onChange={() => onFilterChange('price', range.value)}
+                className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+              />
+              <label htmlFor={range.id} className="ml-2 text-sm text-foreground">
+                {range.label}
+              </label>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-      <div className="mt-6 pt-6 border-t border-border">
-        <Button variant="default" fullWidth iconName="Check" iconPosition="left">
-          Apply Filters
-        </Button>
+
+      {/* Brands */}
+      <div className="mb-6">
+        <h4 className="font-semibold mb-3 text-sm">Brands</h4>
+        <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
+          {[
+            'Apple', 'Samsung', 'OnePlus', 'Xiaomi', 'Google',
+            'Vivo', 'OPPO', 'Realme', 'Nothing', 'Motorola',
+            'Sony', 'Belkin', 'Anker', 'Spigen'
+          ].map((brand) => (
+            <div key={brand} className="flex items-center">
+              <input
+                type="checkbox"
+                id={`brand-${brand}`}
+                checked={filters.brand?.includes(brand) || false}
+                onChange={() => {
+                  const currentBrands = filters.brand || [];
+                  const updatedBrands = currentBrands.includes(brand)
+                    ? currentBrands.filter(b => b !== brand)
+                    : [...currentBrands, brand];
+                  onFilterChange('brand', updatedBrands);
+                }}
+                className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+              />
+              <label htmlFor={`brand-${brand}`} className="ml-2 text-sm text-foreground">
+                {brand}
+              </label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Features for mobile devices */}
+      <div className="mb-6">
+        <h4 className="font-semibold mb-3 text-sm">Features</h4>
+        <div className="space-y-2">
+          {['5G Support', 'Fast Charging', 'Wireless Charging', 'AMOLED Display', 'High Refresh Rate'].map((feature) => (
+            <div key={feature} className="flex items-center">
+              <input
+                type="checkbox"
+                id={`feature-${feature}`}
+                checked={filters.features?.includes(feature) || false}
+                onChange={() => {
+                  const currentFeatures = filters.features || [];
+                  const updatedFeatures = currentFeatures.includes(feature)
+                    ? currentFeatures.filter(f => f !== feature)
+                    : [...currentFeatures, feature];
+                  onFilterChange('features', updatedFeatures);
+                }}
+                className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+              />
+              <label htmlFor={`feature-${feature}`} className="ml-2 text-sm text-foreground">
+                {feature}
+              </label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Customer Rating */}
+      <div className="mb-6">
+        <h4 className="font-semibold mb-3 text-sm">Customer Rating</h4>
+        <div className="space-y-2">
+          {[4.5, 4, 3.5, 3].map((rating) => (
+            <div key={rating} className="flex items-center">
+              <input
+                type="checkbox"
+                id={`rating-${rating}`}
+                checked={filters.rating === rating}
+                onChange={() => onFilterChange('rating', rating)}
+                className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+              />
+              <label htmlFor={`rating-${rating}`} className="ml-2 text-sm text-foreground flex items-center">
+                <span>{rating}+ </span>
+                <div className="flex ml-1">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Icon 
+                      key={i} 
+                      name="Star" 
+                      size={12} 
+                      color={i < Math.floor(rating) ? "var(--color-warning)" : "var(--color-muted)"}
+                      className={i < Math.floor(rating) ? "fill-current" : ""}
+                    />
+                  ))}
+                </div>
+              </label>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

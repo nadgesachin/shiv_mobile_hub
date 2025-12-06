@@ -9,7 +9,7 @@ import ServiceCategories from './components/ServiceCategories';
 import TestimonialCarousel from './components/TestimonialCarousel';
 import LiveActivityFeed from './components/LiveActivityFeed';
 import CTASection from './components/CTASection';
-
+import MobileShowcase from './components/MobileShowcase';
 const Homepage = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -39,6 +39,7 @@ const Homepage = () => {
         <Header />
 
         <main>
+          <MobileShowcase />
           <HeroSection />
           {/* <QuickServiceBar /> */}
           {/* <TrustIndicators /> */}
