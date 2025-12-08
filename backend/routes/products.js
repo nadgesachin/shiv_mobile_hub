@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product');
+const Category = require('../models/Category');
+const mongoose = require('mongoose');
 const passport = require('passport');
 require('../config/passport')(passport);
 
@@ -135,45 +137,26 @@ router.post('/', adminAuth, async (req, res) => {
   }
 });
 
-// @route   PUT /api/products/:id
-// @desc    Update product (Admin only)
-router.put('/:id', adminAuth, async (req, res) => {
+router.put('/:id', async (req, res) => {
   try {
-    // Check if user is admin
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        message: 'Admin access required'
-      });
-    }
+    const { category, ...rest } = req.body; // Extract category for validation
 
-    const product = await Product.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
-
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: 'Product not found'
-      });
-    }
-
-    res.json({
-      success: true,
-      message: 'Product updated successfully',
-      data: {
-        product
+    // Optionally, check if the category exists
+    if (category) {
+      const categoryExists = await Category.findById(category);
+      if (!categoryExists) {
+        return res.status(400).json({ message: 'Category not found.' });
       }
-    });
+    }
+    req.body.category = category;
+    // Update the product
+    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    res.json(product);
   } catch (error) {
-    console.error('Update product error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error',
-      error: error.message
-    });
+    res.status(400).json({ message: error.message });
   }
 });
 

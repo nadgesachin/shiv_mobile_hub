@@ -26,7 +26,7 @@ const ProductsManagement = () => {
 
   useEffect(() => {
     if(localStorage.getItem('categories-product')) {
-      setCategories(JSON.parse(localStorage.getItem('categories')));
+      setCategories(JSON.parse(localStorage.getItem('categories-product')));
     } else {
       fetchCategories();
     }
@@ -234,7 +234,7 @@ const ProductsManagement = () => {
                 className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="all">All Categories</option>
-                {categories.map(category => (
+                {categories?.length > 0 && categories.map(category => (
                   <option key={category._id} value={category._id}>
                     {category.name}
                   </option>

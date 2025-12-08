@@ -152,65 +152,60 @@ const Category = require('../models/Category');
 
 const sampleSections = [
   {
-    name: "flash-deals",
-    title: "Flash Deals",
-    subtitle: "Limited Time Offers",
-    description: "Grab these amazing deals before they're gone!",
-    maxProducts: 10,
-    displayOrder: 1,
-    settings: {
-      showBadge: true,
-      showRating: true,
-      showDiscount: true,
-      autoUpdate: true,
-      updateCriteria: "discounted"
-    }
-  },
-  {
-    name: "new-arrivals",
+    name: "New Arrivals",
+    icon: "Package",
     title: "New Arrivals",
-    subtitle: "Latest Products",
-    description: "Check out the newest additions to our store",
-    maxProducts: 10,
+    subtitle: "Latest Products Just In",
+    description: "Discover the newest additions to our store.",
+    products: [],
+    maxProducts: 12,
+    isActive: true,
     displayOrder: 2,
     settings: {
       showBadge: true,
       showRating: true,
       showDiscount: true,
       autoUpdate: true,
-      updateCriteria: "newest"
+      updateCriteria: "newest" // ✔ valid
     }
   },
   {
-    name: "top-accessories",
+    name: "Top Accessories",
+    icon: "Headphones",
     title: "Top Accessories",
-    subtitle: "Essential Add-ons",
-    description: "Must-have accessories for your devices",
-    maxProducts: 10,
+    subtitle: "Best-Selling Mobile & Tech Accessories",
+    description: "Handpicked accessories that customers love.",
+    products: [],
+    maxProducts: 15,
+    isActive: true,
     displayOrder: 3,
     settings: {
       showBadge: true,
       showRating: true,
-      showDiscount: true,
-      autoUpdate: false
+      showDiscount: false,
+      autoUpdate: true,
+      updateCriteria: "highest-rated" // ✔ valid
     }
   },
   {
-    name: "featured-products",
+    name: "Featured Products",
+    icon: "Star",
     title: "Featured Products",
-    subtitle: "Handpicked for You",
-    description: "Our most popular and recommended products",
-    maxProducts: 10,
+    subtitle: "Handpicked Items Specially for You",
+    description: "Premium curated products highlighted for customers.",
+    products: [],
+    maxProducts: 8,
+    isActive: true,
     displayOrder: 4,
     settings: {
       showBadge: true,
       showRating: true,
       showDiscount: true,
-      autoUpdate: true,
-      updateCriteria: "highest-rated"
+      autoUpdate: false,
+      updateCriteria: "bestselling" // ✔ valid
     }
   }
-];
+]
 
 const sampleServices = [
   {
@@ -287,7 +282,7 @@ const services = [
   { name: 'Product Consultation', description: 'Advice on best phone or gadget', price: 0, priceType: 'free', category: 'Consultation', isActive: true }
 ];
 // Seed function
- const seedDatabase = async () => {
+const seedDatabase = async () => {
   try {
     // Connect to MongoDB
     await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/shiv-mobile-hub');
@@ -298,7 +293,7 @@ const services = [
     // await Product.deleteMany({});
     // await Section.deleteMany({});
     // await Service.deleteMany({});
-    console.log('Cleared existing data');
+    // console.log('Cleared existing data');
 
     // // Create customer user
     // const hashedPassword = await bcrypt.hash('customer123456', 10);
@@ -345,18 +340,19 @@ const services = [
     // // Create services
     // await Service.insertMany(sampleServices);
     // console.log(`Created ${sampleServices.length} services`);
-    
-    
-    
+
+
+
     // Seed categories
-    await Category.insertMany(categories);
+    // await Category.insertMany(categories);
+    await Section.insertMany(sampleSections);
 
     // Seed services (ensure category references are valid ObjectIds; you may need to query and link them)
-    services.map(async (ele)=>{
-      const id = (await Category.findOne({name:ele.category}))._id;
-      ele.category = id;
-    })
-    await Service.insertMany(services);
+    // services.map(async (ele) => {
+    //   const id = (await Category.findOne({ name: ele.category }))._id;
+    //   ele.category = id;
+    // })
+    // await Service.insertMany(services);
     console.log('Database seeded successfully!');
     process.exit(0);
   } catch (error) {

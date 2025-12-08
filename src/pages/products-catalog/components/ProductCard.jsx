@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import Image from '../../../components/AppImage';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
-
-const ProductCard = ({ product, onAddToCart, onQuickView, onAddToWishlist }) => {
+import ProductEnquiryModal from '../../../components/products/ProductEnquiryModal';
+const ProductCard = ({ product, onAddToCart, onQuickView, onAddToWishlist, enquiryProduct }) => {
   const [isWishlisted, setIsWishlisted] = useState(false);
 
   const handleWishlistToggle = () => {
@@ -23,7 +23,7 @@ const ProductCard = ({ product, onAddToCart, onQuickView, onAddToWishlist }) => 
           alt={product?.imageAlt}
           className="w-full h-full object-cover transition-smooth group-hover:scale-110"
         />
-        
+
         {product?.badge && (
           <div className="absolute top-2 left-2 px-2 py-1 bg-accent text-accent-foreground text-xs font-semibold rounded-md">
             {product?.badge}
@@ -121,6 +121,13 @@ const ProductCard = ({ product, onAddToCart, onQuickView, onAddToWishlist }) => 
         >
           {product?.stockStatus === 'out' ? 'Out of Stock' : 'Add to Cart'}
         </Button>
+
+        {enquiryProduct && (
+          <ProductEnquiryModal
+            product={enquiryProduct}
+            onClose={() => setEnquiryProduct(null)}
+          />
+        )}
       </div>
     </div>
   );

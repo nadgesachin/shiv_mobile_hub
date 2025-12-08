@@ -626,6 +626,27 @@ class ApiService {
     });
   }
 
+  async getAllConversations(){
+    return this.request('/messages/conversations');
+  }
+
+  async getAllConversationsById(userId){
+    return this.request(`/messages/conversations/${userId}`);
+  }
+
+  async markMessagesAsRead(userId){
+    return this.request(`/messages/read/${userId}`, {
+      method: 'PUT',
+    });
+  }
+
+  async sendMessage(payload){
+    return this.request('/messages/send', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
 }
 
 // Create and export singleton instance

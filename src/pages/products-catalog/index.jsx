@@ -24,8 +24,10 @@ const ProductsCatalog = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [currentCategory, setCurrentCategory] = useState('all');
   const [products, setProducts] = useState([]);
-const [loading, setLoading] = useState(true);
-const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [enquiryProduct, setEnquiryProduct] = useState(null);
+
   const sortOptions = [
     { value: 'featured', label: 'Featured' },
     { value: 'price-low', label: 'Price: Low to High' },
@@ -33,7 +35,7 @@ const [error, setError] = useState('');
     { value: 'rating', label: 'Customer Rating' },
     { value: 'newest', label: 'Newest First' },
     { value: 'popular', label: 'Most Popular' }];
-  
+
   // Updated categories for better organization
   const categoryOptions = [
     { id: 'all', name: 'All Products', icon: 'Grid' },
@@ -46,7 +48,7 @@ const [error, setError] = useState('');
 
   const handleAddToCart = (product) => {
     setCartItems((prev) => [...prev, product]);
-    console.log('Added to cart:', product);
+    setEnquiryProduct(product);
   };
 
   const handleQuickView = (product) => {
@@ -112,13 +114,13 @@ const [error, setError] = useState('');
     handleSearch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentCategory, sortBy]);
-  
+
   // Trigger search when search query changes
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       handleSearch();
     }, 300); // Debounce search by 300ms
-    
+
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
@@ -127,22 +129,22 @@ const [error, setError] = useState('');
   }, []);
 
   useEffect(() => {
-  const fetchProducts = async () => {
-    try {
-      const response = await apiService.getProducts({ limit: 200 }); // or whatever limit you want
-      setProducts(response.data.products || []);
-      setError('');
-    } catch (err) {
-      console.error('Failed to fetch products:', err);
-      setError('Failed to load products');
-    } finally {
-      setLoading(false);
-    }
-  };
+    const fetchProducts = async () => {
+      try {
+        const response = await apiService.getProducts({ limit: 200 }); // or whatever limit you want
+        setProducts(response.data.products || []);
+        setError('');
+      } catch (err) {
+        console.error('Failed to fetch products:', err);
+        setError('Failed to load products');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  fetchProducts();
-}, []);
-  
+    fetchProducts();
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -268,6 +270,7 @@ const [error, setError] = useState('');
                     onAddToCart={handleAddToCart}
                     onQuickView={handleQuickView}
                     onAddToWishlist={handleAddToWishlist}
+                    enquiryProduct = {enquiryProduct}
                   />
                   <button
                     onClick={() => handleAddToComparison(product)}
@@ -289,7 +292,7 @@ const [error, setError] = useState('');
                 </div>
                 <h3 className="text-lg font-semibold text-foreground mb-2">No products found</h3>
                 <p className="text-muted-foreground max-w-md mx-auto">
-                  {searchQuery.trim() !== '' 
+                  {searchQuery.trim() !== ''
                     ? `We couldn't find any products matching "${searchQuery}" in this category.`
                     : 'No products found in this category.'}
                   Try different keywords or select another category.
@@ -405,8 +408,8 @@ const [error, setError] = useState('');
         <ComparisonModal
           products={comparisonProducts}
           onClose={() => setShowComparison(false)}
-          onRemoveProduct={handleRemoveFromComparison} />
-
+          onRemoveProduct={handleRemoveFromComparison}
+          onEnquire = {handleAddToCart} />
       }
       <Footer />
     </div>);

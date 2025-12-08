@@ -13,6 +13,8 @@ import ServiceComparison from './components/ServiceComparison';
 import TrustIndicators from './components/TrustIndicators';
 import RecentBookings from './components/RecentBookings';
 import apiService from 'services/api';
+import { openChatWithLink } from '../../utils/ChatUtil';
+
 const ServicesHub = () => {
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState('all');
@@ -34,7 +36,7 @@ const ServicesHub = () => {
   //   { id: 'digital', name: 'Digital Services', icon: 'Globe', color: 'var(--color-trust-builder)', count: 5 }
   // ];
 
-    const servicesss = [
+  const servicesss = [
     {
       id: 1,
       title: 'Mobile Screen Repair',
@@ -582,9 +584,17 @@ const ServicesHub = () => {
     }
   ];
 
+
   const handleBookNow = (service) => {
-    setSelectedService(service);
-    setShowBookingModal(true);
+    const url = `${window.location.origin}/services-hub`; // or a more specific path if you have one
+
+    openChatWithLink(
+      {
+        name: service.title,
+        url,
+      },
+      'book'
+    );
   };
 
   const handleBookingConfirm = (bookingData) => {

@@ -70,22 +70,25 @@ const ProductForm = ({ product, isEditing, onSubmit, onClose }) => {
   // ];
 
   useEffect(() => {
-    if(localStorage.getItem('categories-product')) {
-      setCategories(JSON.parse(localStorage.getItem('categories')));
+    if (localStorage.getItem('categories-product')) {
+      setCategories(JSON.parse(localStorage.getItem('categories-product')));
     } else {
       fetchCategories();
     }
   }, []);
-  
+
   const fetchCategories = async () => {
     try {
-      const response = await apiService.getCategories();
-      if(response.data){
+      const query = {
+        type: 'product'
+      };
+      const response = await apiService.getCategories(query, false);
+      if (response.data) {
         setCategories(response.data);
         localStorage.setItem('categories-product', JSON.stringify(response.data));
       }
-    } catch (error) {
-      console.error('Failed to fetch categories:', error);
+    } catch (err) {
+      setErrors(err.message || 'Failed to fetch categories');
     }
   };
 
@@ -110,7 +113,7 @@ const ProductForm = ({ product, isEditing, onSubmit, onClose }) => {
         description: product.description || '',
         price: product.price || '',
         originalPrice: product.originalPrice || '',
-        category: product.category || 'smartphones',
+        category: product.category || '',
         subcategory: product.subcategory || '',
         brand: product.brand || '',
         badge: product.badge || '',
@@ -399,7 +402,7 @@ const ProductForm = ({ product, isEditing, onSubmit, onClose }) => {
                 onChange={handleChange}
                 className={`w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary ${errors.category ? 'border-error' : ''}`}
               >
-                {categories.map(cat => (
+                {categories?.length > 0 && categories.map(cat => (
                   <option key={cat._id} value={cat._id}>
                     {cat.name}
                   </option>

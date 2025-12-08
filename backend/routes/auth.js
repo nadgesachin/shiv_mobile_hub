@@ -5,7 +5,7 @@ const passport = require('passport');
 require('../config/passport')(passport);
 const User = require('../models/User');
 const { body, validationResult } = require('express-validator');
-
+const Message = require('../models/Message');
 const router = express.Router();
 
 // Generate JWT Token
@@ -54,6 +54,24 @@ router.post('/register', [
     });
 
     await user.save();
+
+     // After successful registration, send default message from admin to this user
+   try {
+     // Find any admin user (you can narrow this to a specific email if you want)
+     const adminUser = await User.findOne({ role: 'admin' });
+     if (adminUser) {
+       await Message.create({
+         senderId: adminUser._id,
+         recipientId: user._id,
+         message: 'Hello from admin',
+         type: 'text',
+         read: false
+       });
+     }
+   } catch (msgErr) {
+     // Log but do NOT block registration if message fails
+     console.error('Failed to create default admin message:', msgErr);
+   }
 
     // Generate token
     const token = generateToken(user);

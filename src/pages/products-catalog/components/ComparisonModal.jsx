@@ -3,7 +3,7 @@ import Image from '../../../components/AppImage';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 
-const ComparisonModal = ({ products, onClose, onRemoveProduct }) => {
+const ComparisonModal = ({ products, onClose, onRemoveProduct, onEnquire }) => {
   const specCategories = [
     { key: 'display', label: 'Display', icon: 'Monitor' },
     { key: 'processor', label: 'Processor', icon: 'Cpu' },
@@ -73,7 +73,14 @@ const ComparisonModal = ({ products, onClose, onRemoveProduct }) => {
                     </span>
                   </div>
                 )}
-                <Button variant="default" size="sm" fullWidth iconName="ShoppingCart" iconPosition="left">
+                <Button
+                  variant="default"
+                  size="sm"
+                  fullWidth
+                  iconName="ShoppingCart"
+                  iconPosition="left"
+                  onClick={() => onEnquire(product)}
+                >
                   Add to Cart
                 </Button>
               </div>

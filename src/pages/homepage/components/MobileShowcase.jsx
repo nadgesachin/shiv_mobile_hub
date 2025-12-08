@@ -100,14 +100,14 @@ const MobileShowcase = () => {
   // Reference to scroll containers - dynamic based on sections
   const sectionRefs = useRef({});
   
-  // Get products for a specific section
-  const getSectionProducts = () => {
-    if (products.length === 0) return [];
-    
-    return products.length > 0 &&  products
+  // Get products for a specific section, filtered by section ID
+  const getSectionProducts = (sectionId) => {
+    // if (products.length === 0) return [];
+    return products
       .filter(product => 
         product.isActive && 
-        product.sections
+        product.sections && 
+        product.sections.some(sectionObj => sectionObj._id.toString() === sectionId.toString())
       )
       .slice(0, 8)
       .map(product => ({
@@ -245,12 +245,10 @@ const MobileShowcase = () => {
         </div>
 
         {/* Dynamic Sections */}
-        {sections.length > 0 && sections?.map((section) => {
-          const sectionProducts = getSectionProducts();
+        {sections.length > 0 && sections.map((section) => {
+          const sectionProducts = getSectionProducts(section._id);
+          if (sectionProducts.length === 0) return null;  // Hide sections with no products
           const currentIndex = slideIndices[section._id] || 0;
-          console.log("sectionProducts: ",sectionProducts); 
-          if (sectionProducts.length === 0) return null;
-          
           return (
             <div key={section._id} className="mb-10">
               <div className="flex items-center justify-between mb-4">
@@ -259,7 +257,7 @@ const MobileShowcase = () => {
                     <Icon name={section.icon || 'Grid3x3'} size={20} className="mr-1" />
                     {section.title}
                   </div>
-                  {section.slug === 'flash-deals' && (
+                  {section.name === 'Flash Deals' && (  // Use section.name for badge check if needed
                     <div className="bg-destructive/10 text-destructive text-xs font-bold px-2 py-1 rounded">
                       Ending Soon
                     </div>
@@ -300,7 +298,7 @@ const MobileShowcase = () => {
                   className="flex space-x-4 overflow-x-auto hide-scrollbar snap-x snap-mandatory pb-4" 
                   ref={el => sectionRefs.current[section._id] = el}
                 >
-                  { sectionProducts.length > 0 && sectionProducts.map((product) => (
+                  {sectionProducts.map((product) => (
                     <Link 
                       to={product.link} 
                       key={product.id} 
@@ -376,7 +374,7 @@ const MobileShowcase = () => {
             </div>
           );
         })}
-
+        
         {/* Quick access category cards */}
         <div className="mb-10">
           <h3 className="text-lg font-semibold text-foreground mb-4">

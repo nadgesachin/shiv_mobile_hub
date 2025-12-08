@@ -5,7 +5,7 @@ import Input from '../ui/Input';
 import Toast from '../ui/Toast';
 import apiService from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
-
+import { openChatWithLink } from '../../utils/ChatUtil';
 const ProductEnquiryModal = ({ product, onClose }) => {
   const { user, isAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
@@ -24,6 +24,17 @@ const ProductEnquiryModal = ({ product, onClose }) => {
     }));
   };
 
+  const handleChatInApp = () => {
+    openChatWithLink(
+      {
+        name: product.name,
+        url: `${window.location.origin}/products/${product._id}`,
+      },
+      'cart' // or 'book', use whatever action label you prefer
+    );
+    onClose();
+  };
+
   const copyProductLink = () => {
     const url = `${window.location.origin}/products/${product._id}`;
     navigator.clipboard.writeText(url)
@@ -34,7 +45,7 @@ const ProductEnquiryModal = ({ product, onClose }) => {
   const sendEnquiryMessage = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
       // If user is logged in, send as chat message
       if (isAuthenticated()) {
@@ -52,7 +63,7 @@ const ProductEnquiryModal = ({ product, onClose }) => {
           type: 'product'
         });
       }
-      
+
       Toast.success('Enquiry sent successfully! We will contact you shortly.');
       onClose();
     } catch (error) {
@@ -67,9 +78,9 @@ const ProductEnquiryModal = ({ product, onClose }) => {
     const url = encodeURIComponent(`${window.location.origin}/products/${product._id}`);
     const title = encodeURIComponent(`Check out ${product.name}`);
     const text = encodeURIComponent(`I found this amazing product: ${product.name}`);
-    
+
     let shareUrl = '';
-    
+
     switch (platform) {
       case 'whatsapp':
         shareUrl = `https://api.whatsapp.com/send?phone=+917123456789&text=${title}%20-%20${url}`;
@@ -88,7 +99,7 @@ const ProductEnquiryModal = ({ product, onClose }) => {
       default:
         return;
     }
-    
+
     window.open(shareUrl, '_blank');
   };
 
@@ -129,45 +140,54 @@ const ProductEnquiryModal = ({ product, onClose }) => {
           <div className="mb-6">
             <h3 className="font-medium mb-2">Contact via:</h3>
             <div className="grid grid-cols-5 gap-2">
-              <Button 
-                variant="outline" 
-                className="flex flex-col items-center justify-center h-16" 
+              <Button
+                variant="outline"
+                className="flex flex-col items-center justify-center h-16"
                 onClick={() => shareVia('whatsapp')}
               >
                 <Icon name="Phone" size={18} className="text-green-600" />
                 <span className="text-xs mt-1">WhatsApp</span>
               </Button>
-              
-              <Button 
-                variant="outline" 
-                className="flex flex-col items-center justify-center h-16" 
+
+              <Button
+                variant="outline"
+                className="flex flex-col items-center justify-center h-16"
                 onClick={() => shareVia('facebook')}
               >
                 <Icon name="Facebook" size={18} className="text-blue-600" />
                 <span className="text-xs mt-1">Facebook</span>
               </Button>
-              
-              <Button 
-                variant="outline" 
-                className="flex flex-col items-center justify-center h-16" 
+
+              <Button
+                variant="outline"
+                className="flex flex-col items-center justify-center h-16"
                 onClick={() => shareVia('instagram')}
               >
                 <Icon name="Instagram" size={18} className="text-pink-600" />
                 <span className="text-xs mt-1">Instagram</span>
               </Button>
-              
-              <Button 
-                variant="outline" 
-                className="flex flex-col items-center justify-center h-16" 
+
+              <Button
+                variant="outline"
+                className="flex flex-col items-center justify-center h-16"
                 onClick={() => shareVia('email')}
               >
                 <Icon name="Mail" size={18} className="text-purple-600" />
                 <span className="text-xs mt-1">Email</span>
               </Button>
-              
-              <Button 
-                variant="outline" 
-                className="flex flex-col items-center justify-center h-16" 
+
+              <Button
+                variant="outline"
+                className="flex flex-col items-center justify-center h-16"
+                onClick={handleChatInApp}
+              >
+                <Icon name="MessageCircle" size={18} className="text-primary" />
+                <span className="text-xs mt-1">Chat in App</span>
+              </Button>
+
+              <Button
+                variant="outline"
+                className="flex flex-col items-center justify-center h-16"
                 onClick={copyProductLink}
               >
                 <Icon name="Copy" size={18} className="text-gray-600" />
@@ -188,7 +208,7 @@ const ProductEnquiryModal = ({ product, onClose }) => {
                 required
                 disabled={loading}
               />
-              
+
               <Input
                 type="email"
                 name="email"
@@ -198,7 +218,7 @@ const ProductEnquiryModal = ({ product, onClose }) => {
                 required
                 disabled={loading}
               />
-              
+
               <Input
                 type="tel"
                 name="phone"
@@ -207,7 +227,7 @@ const ProductEnquiryModal = ({ product, onClose }) => {
                 placeholder="Your Phone Number"
                 disabled={loading}
               />
-              
+
               <div>
                 <textarea
                   name="message"
@@ -220,7 +240,7 @@ const ProductEnquiryModal = ({ product, onClose }) => {
                   required
                 ></textarea>
               </div>
-              
+
               <Button
                 type="submit"
                 className="w-full"
