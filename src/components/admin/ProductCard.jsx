@@ -163,10 +163,10 @@ const ProductCard = ({ product, onEdit, onDelete, onToggleStatus }) => {
             <div className="flex flex-wrap gap-1">
               {product.sections.map((section, index) => (
                 <span
-                  key={index}
+                  key={section._id}
                   className="text-xs px-2 py-1 bg-primary/10 text-primary rounded"
                 >
-                  {section.replace('-', ' ')}
+                  {section.title}
                 </span>
               ))}
             </div>

@@ -12,7 +12,7 @@ import BookingModal from './components/BookingModal';
 import ServiceComparison from './components/ServiceComparison';
 import TrustIndicators from './components/TrustIndicators';
 import RecentBookings from './components/RecentBookings';
-
+import apiService from 'services/api';
 const ServicesHub = () => {
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState('all');
@@ -22,23 +22,19 @@ const ServicesHub = () => {
   const [showComparison, setShowComparison] = useState(false);
   const [comparisonServices, setComparisonServices] = useState([]);
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [services, setServices] = useState([]);
+  const [filteredServices, setFilteredServices] = useState([]);
+  const [servicesLoading, setServicesLoading] = useState(false);
+  const [servicesError, setServicesError] = useState(null);
+  // const categories = [
+  //   { id: 'mobile', name: 'Mobile Services', icon: 'Smartphone', color: 'var(--color-primary)', count: 8 },
+  //   { id: 'recharge', name: 'Recharge & Bills', icon: 'Zap', color: 'var(--color-secondary)', count: 6 },
+  //   { id: 'government', name: 'Government Services', icon: 'FileText', color: 'var(--color-accent)', count: 5 },
+  //   { id: 'digital', name: 'Digital Services', icon: 'Globe', color: 'var(--color-trust-builder)', count: 5 }
+  // ];
 
-  const categories = [
-    { id: 'all', name: 'All Services', icon: 'Grid3x3', color: 'var(--color-primary)', count: 24 },
-    { id: 'mobile', name: 'Mobile Services', icon: 'Smartphone', color: 'var(--color-primary)', count: 8 },
-    { id: 'recharge', name: 'Recharge & Bills', icon: 'Zap', color: 'var(--color-secondary)', count: 6 },
-    { id: 'government', name: 'Government Services', icon: 'FileText', color: 'var(--color-accent)', count: 5 },
-    { id: 'digital', name: 'Digital Services', icon: 'Globe', color: 'var(--color-trust-builder)', count: 5 }
-  ];
-
-  const quickActions = [
-    { id: 1, title: 'Mobile Recharge', subtitle: 'Instant top-up', icon: 'Smartphone', color: 'var(--color-primary)' },
-    { id: 2, title: 'Bill Payment', subtitle: 'Pay utility bills', icon: 'Receipt', color: 'var(--color-secondary)' },
-    { id: 3, title: 'PAN Card', subtitle: 'Apply online', icon: 'CreditCard', color: 'var(--color-accent)' },
-    { id: 4, title: 'Aadhaar Update', subtitle: 'Update details', icon: 'UserCheck', color: 'var(--color-trust-builder)' }
-  ];
-
-  const services = [
+    const servicesss = [
     {
       id: 1,
       title: 'Mobile Screen Repair',
@@ -458,6 +454,87 @@ const ServicesHub = () => {
     }
   ];
 
+  const quickActions = [
+    { id: 1, title: 'Mobile Recharge', subtitle: 'Instant top-up', icon: 'Smartphone', color: 'var(--color-primary)' },
+    { id: 2, title: 'Bill Payment', subtitle: 'Pay utility bills', icon: 'Receipt', color: 'var(--color-secondary)' },
+    { id: 3, title: 'PAN Card', subtitle: 'Apply online', icon: 'CreditCard', color: 'var(--color-accent)' },
+    { id: 4, title: 'Aadhaar Update', subtitle: 'Update details', icon: 'UserCheck', color: 'var(--color-trust-builder)' }
+  ];
+
+  const fetchCategories = async () => {
+    try {
+      const query = { type: 'service' };
+      const response = await apiService.getCategories(query);
+      console.log('API response for service categories:', response);
+
+      if (response.data && response.data.length > 0) {
+        const arr = [
+          { _id: 'all', name: 'All Categories', icon: 'Grid3x3' },
+          ...response.data,
+        ];
+        setCategories(arr);
+        localStorage.setItem('categories-service', JSON.stringify(arr));
+      } else {
+        console.warn('No service categories found in response');
+        setCategories([{ _id: 'all', name: 'All Categories', icon: 'Grid3x3' }]);
+      }
+    } catch (err) {
+      console.error('Failed to fetch categories:', err);
+      setError(err.message || 'Failed to fetch categories');
+    }
+  };
+
+  const fetchServices = async (categoryId = 'all') => {
+    try {
+      setServicesLoading(true);
+      setServicesError(null);
+
+      const params = {};
+      if (categoryId !== 'all') {
+        params.category = categoryId;
+      }
+
+      const response = await apiService.getServices(params);
+      const data = response.data?.services;
+      setServices(data);
+    } catch (err) {
+      console.error('Failed to fetch services:', err);
+      setServicesError(err.message || 'Failed to fetch services');
+    } finally {
+      setServicesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchServices(activeCategory);
+  }, [activeCategory]);
+
+  useEffect(() => {
+    if (localStorage.getItem('categories-service')) {
+      const arr = JSON.parse(localStorage.getItem('categories-service'));
+      setCategories(arr);
+    } else {
+      fetchCategories();
+    }
+  }, []);
+
+  useEffect(() => {
+    const tempFilteredServices = Array.isArray(services) ? services.filter(service => {
+      const matchesCategory = activeCategory === 'all' || service?.category === activeCategory;
+      const matchesSearch = service?.name?.toLowerCase()?.includes(searchQuery?.toLowerCase()) ||
+        service?.description?.toLowerCase()?.includes(searchQuery?.toLowerCase());
+      return matchesCategory && matchesSearch;
+    }) : [];
+    setFilteredServices(tempFilteredServices);
+  }, [services])
+
+  // const quickActions = [
+  //   { id: 1, title: 'Mobile Recharge', subtitle: 'Instant top-up', icon: 'Smartphone', color: 'var(--color-primary)' },
+  //   { id: 2, title: 'Bill Payment', subtitle: 'Pay utility bills', icon: 'Receipt', color: 'var(--color-secondary)' },
+  //   { id: 3, title: 'PAN Card', subtitle: 'Apply online', icon: 'CreditCard', color: 'var(--color-accent)' },
+  //   { id: 4, title: 'Aadhaar Update', subtitle: 'Update details', icon: 'UserCheck', color: 'var(--color-trust-builder)' }
+  // ];
+
   const recentBookings = [
     {
       id: 1,
@@ -505,13 +582,6 @@ const ServicesHub = () => {
     }
   ];
 
-  const filteredServices = services?.filter(service => {
-    const matchesCategory = activeCategory === 'all' || service?.category === activeCategory;
-    const matchesSearch = service?.title?.toLowerCase()?.includes(searchQuery?.toLowerCase()) ||
-                         service?.description?.toLowerCase()?.includes(searchQuery?.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
-
   const handleBookNow = (service) => {
     setSelectedService(service);
     setShowBookingModal(true);
@@ -525,7 +595,7 @@ const ServicesHub = () => {
   };
 
   const handleQuickAction = (action) => {
-    const service = services?.find(s => s?.title === action?.title);
+    const service = services?.find(s => s?.name === action?.name);
     if (service) {
       handleBookNow(service);
     }
@@ -584,7 +654,7 @@ const ServicesHub = () => {
             </div>
           </div>
 
-          <QuickActions actions={quickActions} onActionClick={handleQuickAction} />
+          {/* <QuickActions actions={quickActions} onActionClick={handleQuickAction} /> */}
         </div>
       </section>
       <section className="py-12 lg:py-16">
@@ -599,7 +669,7 @@ const ServicesHub = () => {
               <CategoryFilter
                 categories={categories}
                 activeCategory={activeCategory}
-                onCategoryChange={setActiveCategory}
+                onCategoryChange={(id) => setActiveCategory(id)}
               />
             </aside>
 

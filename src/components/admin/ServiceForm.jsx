@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Icon from '../AppIcon';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
+import apiService from '../../services/api';
 
 const ServiceForm = ({ service, isEditing, onSubmit, onClose }) => {
   const [formData, setFormData] = useState({
@@ -24,19 +25,42 @@ const ServiceForm = ({ service, isEditing, onSubmit, onClose }) => {
       publicId: ''
     }
   });
-  
+
   const [featureInput, setFeatureInput] = useState('');
   const [requirementInput, setRequirementInput] = useState('');
   const [processStep, setProcessStep] = useState({ step: '', description: '' });
   const [errors, setErrors] = useState({});
+  const [categories, setCategories] = useState([]);
 
-  const categories = [
-    { value: 'mobile-services', label: 'Mobile Services' },
-    { value: 'government-services', label: 'Government Services' },
-    { value: 'financial-services', label: 'Financial Services' },
-    { value: 'digital-services', label: 'Digital Services' }
-  ];
+  useEffect(() => {
+    if (localStorage.getItem('categories-service')) {
+      setCategories(JSON.parse(localStorage.getItem('categories-service')));
+    } else {
+      fetchCategories();
+    }
+  }, []);
 
+  const fetchCategories = async () => {
+    try {
+      const query = {
+        type: 'service'
+      };
+      const response = await apiService.getCategories(query);
+      console.log('API response for service categories:', response); // Log response for debugging
+      if (response.data && response.data.length > 0) {
+        setCategories(response.data);
+        localStorage.setItem('categories-service', JSON.stringify(response.data));
+      } else {
+        console.warn('No service categories found in response');
+        setCategories([]); // Ensure categories are reset if empty
+        // Optionally, show a user message or fallback
+      }
+    } catch (err) {
+      console.error('Failed to fetch categories:', err);
+      setError(err.message || 'Failed to fetch categories');
+      // Add toast or alert if needed
+    }
+  };
   const priceTypes = [
     { value: 'fixed', label: 'Fixed Price' },
     { value: 'variable', label: 'Variable Price' },
@@ -75,12 +99,12 @@ const ServiceForm = ({ service, isEditing, onSubmit, onClose }) => {
   // Handle form input changes
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    
+
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
-    
+
     // Clear error for this field
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
@@ -147,7 +171,7 @@ const ServiceForm = ({ service, isEditing, onSubmit, onClose }) => {
   // Validate form
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.name.trim()) newErrors.name = 'Service name is required';
     if (!formData.description.trim()) newErrors.description = 'Description is required';
     if (!formData.category) newErrors.category = 'Category is required';
@@ -155,7 +179,7 @@ const ServiceForm = ({ service, isEditing, onSubmit, onClose }) => {
     if (formData.priceType !== 'free' && (!formData.price || formData.price < 0)) {
       newErrors.price = 'Valid price is required';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -163,15 +187,15 @@ const ServiceForm = ({ service, isEditing, onSubmit, onClose }) => {
   // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
-    
+
     const submitData = {
       ...formData,
       price: formData.priceType === 'free' ? 0 : Number(formData.price),
       displayOrder: Number(formData.displayOrder)
     };
-    
+
     if (isEditing) {
       onSubmit(service._id, submitData);
     } else {
@@ -257,8 +281,8 @@ const ServiceForm = ({ service, isEditing, onSubmit, onClose }) => {
                 className={`w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary ${errors.category ? 'border-error' : ''}`}
               >
                 {categories.map(cat => (
-                  <option key={cat.value} value={cat.value}>
-                    {cat.label}
+                  <option key={cat._id} value={cat._id}>
+                    {cat.name}
                   </option>
                 ))}
               </select>

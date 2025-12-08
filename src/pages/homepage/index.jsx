@@ -45,7 +45,7 @@ const Homepage = () => {
           {/* <TrustIndicators /> */}
           <ServiceCategories />
           <TestimonialCarousel />
-          <LiveActivityFeed />
+          {/* <LiveActivityFeed /> */}
           <CTASection />
         </main>
 

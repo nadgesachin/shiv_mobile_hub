@@ -23,19 +23,21 @@ const ProductForm = ({ product, isEditing, onSubmit, onClose }) => {
     detailedSpecs: {},
     images: []
   });
-  
+
   const [specInput, setSpecInput] = useState('');
   const [detailedSpecInput, setDetailedSpecInput] = useState({ key: '', value: '' });
   const [uploading, setUploading] = useState(false);
   const [errors, setErrors] = useState({});
-
-  const categories = [
-    { value: 'smartphones', label: 'Smartphones' },
-    { value: 'tablets', label: 'Tablets' },
-    { value: 'audio', label: 'Audio' },
-    { value: 'wearables', label: 'Wearables' },
-    { value: 'accessories', label: 'Accessories' }
-  ];
+  const [categories, setCategories] = useState([]);
+  const [sections, setSections] = useState([]);
+  // const [badges, setBadges] = useState([]);
+  // const categories = [
+  //   { value: 'smartphones', label: 'Smartphones' },
+  //   { value: 'tablets', label: 'Tablets' },
+  //   { value: 'audio', label: 'Audio' },
+  //   { value: 'wearables', label: 'Wearables' },
+  //   { value: 'accessories', label: 'Accessories' }
+  // ];
 
   const subcategories = {
     smartphones: [],
@@ -47,7 +49,7 @@ const ProductForm = ({ product, isEditing, onSubmit, onClose }) => {
 
   const badges = [
     'Bestseller',
-    'New Arrival', 
+    'New Arrival',
     'Hot Deal',
     'Premium',
     'Limited Edition',
@@ -60,12 +62,45 @@ const ProductForm = ({ product, isEditing, onSubmit, onClose }) => {
     'Best ANC'
   ];
 
-  const sections = [
-    { value: 'flash-deals', label: 'Flash Deals' },
-    { value: 'new-arrivals', label: 'New Arrivals' },
-    { value: 'top-accessories', label: 'Top Accessories' },
-    { value: 'featured-products', label: 'Featured Products' }
-  ];
+  // const sections = [
+  //   { value: 'flash-deals', label: 'Flash Deals' },
+  //   { value: 'new-arrivals', label: 'New Arrivals' },
+  //   { value: 'top-accessories', label: 'Top Accessories' },
+  //   { value: 'featured-products', label: 'Featured Products' }
+  // ];
+
+  useEffect(() => {
+    if(localStorage.getItem('categories-product')) {
+      setCategories(JSON.parse(localStorage.getItem('categories')));
+    } else {
+      fetchCategories();
+    }
+  }, []);
+  
+  const fetchCategories = async () => {
+    try {
+      const response = await apiService.getCategories();
+      if(response.data){
+        setCategories(response.data);
+        localStorage.setItem('categories-product', JSON.stringify(response.data));
+      }
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+    }
+  };
+
+  useEffect(() => {
+    const fetchSections = async () => {
+      try {
+        const response = await apiService.getSections();
+        setSections(response.data.sections);
+      } catch (error) {
+        console.error('Failed to fetch sections:', error);
+      }
+    };
+    fetchSections();
+  }, []);
+
 
   // Initialize form with product data if editing
   useEffect(() => {
@@ -94,12 +129,12 @@ const ProductForm = ({ product, isEditing, onSubmit, onClose }) => {
   // Handle form input changes
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    
+
     if (type === 'checkbox') {
       if (name === 'sections') {
         setFormData(prev => ({
           ...prev,
-          sections: checked 
+          sections: checked
             ? [...prev.sections, value]
             : prev.sections.filter(s => s !== value)
         }));
@@ -110,7 +145,7 @@ const ProductForm = ({ product, isEditing, onSubmit, onClose }) => {
         [name]: value
       }));
     }
-    
+
     // Clear error for this field
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
@@ -168,7 +203,7 @@ const ProductForm = ({ product, isEditing, onSubmit, onClose }) => {
     try {
       setUploading(true);
       const response = await apiService.uploadMultipleImages(files);
-      
+
       const newImages = response.data.files.map(file => ({
         url: file.url,
         alt: file.originalName,
@@ -190,12 +225,12 @@ const ProductForm = ({ product, isEditing, onSubmit, onClose }) => {
   // Remove image
   const handleRemoveImage = async (index) => {
     const image = formData.images[index];
-    
+
     try {
       if (image.publicId) {
         await apiService.deleteImage(image.publicId);
       }
-      
+
       setFormData(prev => ({
         ...prev,
         images: prev.images.filter((_, i) => i !== index)
@@ -208,14 +243,14 @@ const ProductForm = ({ product, isEditing, onSubmit, onClose }) => {
   // Validate form
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.name.trim()) newErrors.name = 'Product name is required';
     if (!formData.description.trim()) newErrors.description = 'Description is required';
     if (!formData.price || formData.price <= 0) newErrors.price = 'Valid price is required';
     if (!formData.category) newErrors.category = 'Category is required';
     if (!formData.brand.trim()) newErrors.brand = 'Brand is required';
     if (formData.images.length === 0) newErrors.images = 'At least one image is required';
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -223,9 +258,9 @@ const ProductForm = ({ product, isEditing, onSubmit, onClose }) => {
   // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
-    
+
     const submitData = {
       ...formData,
       price: Number(formData.price),
@@ -234,7 +269,7 @@ const ProductForm = ({ product, isEditing, onSubmit, onClose }) => {
       reviewCount: formData.reviewCount ? Number(formData.reviewCount) : 0,
       stockCount: formData.stockCount ? Number(formData.stockCount) : 0
     };
-    
+
     if (isEditing) {
       onSubmit(product._id, submitData);
     } else {
@@ -365,8 +400,8 @@ const ProductForm = ({ product, isEditing, onSubmit, onClose }) => {
                 className={`w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary ${errors.category ? 'border-error' : ''}`}
               >
                 {categories.map(cat => (
-                  <option key={cat.value} value={cat.value}>
-                    {cat.label}
+                  <option key={cat._id} value={cat._id}>
+                    {cat.name}
                   </option>
                 ))}
               </select>
@@ -438,16 +473,16 @@ const ProductForm = ({ product, isEditing, onSubmit, onClose }) => {
             </label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {sections.map(section => (
-                <label key={section.value} className="flex items-center gap-2">
+                <label key={section._id} className="flex items-center gap-2">
                   <input
                     type="checkbox"
                     name="sections"
-                    value={section.value}
-                    checked={formData.sections.includes(section.value)}
+                    value={section._id}
+                    checked={formData.sections.includes(section._id)}
                     onChange={handleChange}
                     className="rounded border-border text-primary focus:ring-primary"
                   />
-                  <span className="text-sm">{section.label}</span>
+                  <span className="text-sm">{section.title}</span>
                 </label>
               ))}
             </div>

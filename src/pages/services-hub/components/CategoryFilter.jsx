@@ -11,29 +11,22 @@ const CategoryFilter = ({ categories, activeCategory, onCategoryChange }) => {
       <div className="space-y-2">
         {categories?.map((category) => (
           <button
-            key={category?.id}
-            onClick={() => onCategoryChange(category?.id)}
+            key={category?._id}
+            onClick={() => onCategoryChange(category?._id)}
             className={`w-full flex items-center justify-between px-4 py-3 rounded-md transition-smooth touch-target ${
-              activeCategory === category?.id
+              activeCategory === category?._id
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted hover:bg-muted/80 text-foreground'
             }`}
           >
             <div className="flex items-center gap-3">
               <Icon 
-                name={category?.icon} 
-                size={20} 
-                color={activeCategory === category?.id ? 'currentColor' : category?.color}
+                name={category?.icon || 'Grid3x3'} 
+                size={20}
+                color={activeCategory === category?._id ? 'currentColor' : (category?.color || 'var(--color-primary)')}
               />
               <span className="font-medium text-sm">{category?.name}</span>
             </div>
-            <span className={`text-xs px-2 py-1 rounded-full ${
-              activeCategory === category?.id
-                ? 'bg-primary-foreground/20'
-                : 'bg-background'
-            }`}>
-              {category?.count}
-            </span>
           </button>
         ))}
       </div>

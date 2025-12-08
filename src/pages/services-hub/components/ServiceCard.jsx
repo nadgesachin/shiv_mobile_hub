@@ -6,7 +6,7 @@ import Button from '../../../components/ui/Button';
 const ServiceCard = ({ service, onBookNow }) => {
   const {
     id,
-    title,
+    name,
     description,
     icon,
     iconColor,
@@ -38,7 +38,7 @@ const ServiceCard = ({ service, onBookNow }) => {
         </div>
       </div>
       <h3 className="text-lg font-headline font-semibold text-foreground mb-2 group-hover:text-primary transition-smooth">
-        {title}
+        {name}
       </h3>
       <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
         {description}

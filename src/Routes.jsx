@@ -1,49 +1,70 @@
 import React from "react";
-import { BrowserRouter, Routes as RouterRoutes, Route } from "react-router-dom";
-import ScrollToTop from "components/ScrollToTop";
-import ErrorBoundary from "components/ErrorBoundary";
-import NotFound from "pages/NotFound";
+import { BrowserRouter, Routes as RouterRoutes, Route, Navigate } from "react-router-dom";
+import ScrollToTop from "./components/ScrollToTop";
+import ErrorBoundary from "./components/ErrorBoundary";
+import NotFound from "./pages/NotFound";
 import Contact from './pages/contact';
 import CSCPortal from './pages/csc-portal';
 import ServicesHub from './pages/services-hub';
-import CustomerDashboard from './pages/customer-dashboard';
 import ProductsCatalog from './pages/products-catalog';
 import Homepage from './pages/homepage';
 import LoginPage from './pages/auth/LoginPage';
+import RegisterPage from './pages/auth/RegisterPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import Dashboard from './pages/admin/Dashboard';
 import ProductsManagement from './pages/admin/ProductsManagement';
 import ServicesManagement from './pages/admin/ServicesManagement';
-
+import AdminLayout from './pages/admin/AdminLayout';
+import AdminGuard from './pages/admin/AdminGuard';
+import UsersManagement from './pages/admin/UsersManagement';
+import CategoriesManagement from './pages/admin/CategoriesManagement';
+import SectionsManagement from './pages/admin/SectionsManagement';
+import PagesManagement from './pages/admin/PagesManagement';
+import Settings from './pages/admin/Settings';
+import ChatPage from './pages/chat/ChatPage';
+import NotificationsPage from './pages/notifications/NotificationsPage';
+import { ChatProvider } from './contexts/ChatContext';
+import { NotificationProvider } from './contexts/NotificationContext';
+import ChatWidget from './components/chat/ChatWidget';
 const Routes = () => {
   return (
     <BrowserRouter>
       <ErrorBoundary>
       <ScrollToTop />
+      <ChatProvider>
+      <NotificationProvider>
       <RouterRoutes>
         {/* Authentication Routes */}
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         
         {/* Admin Routes - Protected */}
-        <Route path="/admin" element={
-          <ProtectedRoute requireAdmin={true}>
-            <AdminDashboard />
-          </ProtectedRoute>
-        }>
-          <Route path="dashboard" element={<div>Admin Dashboard Overview</div>} />
+        <Route path="/admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>
+          <Route index element={<Dashboard />} />
+          <Route path="dashboard" element={<Dashboard />} />
           <Route path="products" element={<ProductsManagement />} />
-          <Route path="sections" element={<div>Sections Management</div>} />
+          <Route path="categories" element={<CategoriesManagement />} />
           <Route path="services" element={<ServicesManagement />} />
-          <Route path="users" element={<div>User Management</div>} />
+          <Route path="users" element={<UsersManagement />} />
           <Route path="orders" element={<div>Order Management</div>} />
           <Route path="analytics" element={<div>Analytics Dashboard</div>} />
-          <Route path="settings" element={<div>Admin Settings</div>} />
+          <Route path="pages" element={<PagesManagement />} />
+          <Route path="sections" element={<SectionsManagement />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
         
-        {/* Customer Dashboard - Protected */}
-        <Route path="/customer-dashboard" element={
+        {/* Chat & Notifications - Protected */}
+        <Route path="/chat" element={
           <ProtectedRoute>
-            <CustomerDashboard />
+            <ChatPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/notifications" element={
+          <ProtectedRoute>
+            <NotificationsPage />
           </ProtectedRoute>
         } />
         
@@ -58,6 +79,12 @@ const Routes = () => {
         {/* Fallback Route */}
         <Route path="*" element={<NotFound />} />
       </RouterRoutes>
+      
+      {/* Floating Chat Widget */}
+      <ChatWidget />
+      
+      </NotificationProvider>
+      </ChatProvider>
       </ErrorBoundary>
     </BrowserRouter>
   );

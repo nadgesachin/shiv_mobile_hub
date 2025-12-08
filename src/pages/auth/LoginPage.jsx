@@ -10,7 +10,7 @@ import Input from '../../components/ui/Input';
 const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isAuthenticated, isLoading, error, clearError } = useAuth();
+  const { login, isAuthenticated, isLoading, error, clearError, user, token } = useAuth();
   
   const [formData, setFormData] = useState({
     email: '',
@@ -22,16 +22,22 @@ const LoginPage = () => {
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (isAuthenticated()) {
-      const from = location.state?.from?.pathname || '/dashboard';
-      navigate(from, { replace: true });
+    if (user && token) {
+      // If admin user, redirect to admin dashboard
+      if (user.role === 'admin') {
+        navigate('/admin', { replace: true });
+      } else {
+        // For regular users, redirect to previous location or home
+        const from = location.state?.from?.pathname || '/';
+        navigate(from, { replace: true });
+      }
     }
-  }, [isAuthenticated, navigate, location]);
+  }, [user, token, navigate]);
 
   // Clear any existing errors on component mount
   useEffect(() => {
     clearError();
-  }, [clearError]);
+  }, []);
 
   // Handle form input changes
   const handleChange = (e) => {
@@ -65,9 +71,12 @@ const LoginPage = () => {
       
       if (result.success) {
         // Redirect based on role
-        const redirectPath = result.user.role === 'admin' ? '/admin/dashboard' : '/dashboard';
-        const from = location.state?.from?.pathname || redirectPath;
-        navigate(from, { replace: true });
+        if (result.user.role === 'admin') {
+          navigate('/admin', { replace: true });
+        } else {
+          const from = location.state?.from?.pathname || '/';
+          navigate(from, { replace: true });
+        }
       } else {
         setLoginError(result.error || 'Login failed');
       }

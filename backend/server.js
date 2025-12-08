@@ -6,7 +6,9 @@ const morgan = require('morgan');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
-
+const path = require('path');
+const http = require('http');
+const { initializeSocket } = require('./socket');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -15,8 +17,18 @@ const productRoutes = require('./routes/products');
 const sectionRoutes = require('./routes/sections');
 const serviceRoutes = require('./routes/services');
 const uploadRoutes = require('./routes/upload');
+const messageRoutes = require('./routes/messages');
+const notificationRoutes = require('./routes/notifications');
+const categoryRoutes = require('./routes/categories');
+const pageRoutes = require('./routes/pages');
+const { auth, adminOnly } = require('./middleware/auth');
 
+// All admin routes require login + admin role
 const app = express();
+const server = http.createServer(app);
+
+// Initialize Socket.IO
+// initializeSocket(server);
 
 // Security middleware
 // app.use(helmet());
@@ -27,6 +39,7 @@ const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100 // limit each IP to 100 requests per windowMs
 });
+app.use('/upload', express.static(path.join(__dirname, 'upload')));
 app.use('/api/', limiter);
 
 // CORS configuration
@@ -56,12 +69,17 @@ mongoose.connect('mongodb://localhost:27017/shiv-mobile-hub', {
 });
 
 // Routes
+app.use('/api/admin', auth, adminOnly, require('./routes/admin'));
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/sections', sectionRoutes);
 app.use('/api/services', serviceRoutes);
-app.use('/api/upload', uploadRoutes);
+app.use('/api/upload', auth, uploadRoutes);
+app.use('/api/messages', auth, messageRoutes);
+app.use('/api/notifications', auth, notificationRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/pages', pageRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -92,7 +110,7 @@ app.use('*', (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV}`);
 });

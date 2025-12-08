@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import NotificationDropdown from '../notifications/NotificationDropdown';
 import Icon from '../AppIcon';
 import Button from './Button';
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, isAuthenticated, isAdmin, logout } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -28,6 +33,13 @@ const Header = () => {
     { path: '/csc-portal', label: 'CSC Portal', icon: 'FileText' },
     { path: '/contact', label: 'Contact', icon: 'Phone' },
   ];
+  
+  // Handle logout
+  const handleLogout = () => {
+    logout();
+    setShowUserMenu(false);
+    navigate('/login');
+  };
 
   const isActivePath = (path) => location?.pathname === path;
 
@@ -83,11 +95,95 @@ const Header = () => {
             </nav>
 
             <div className="hidden lg:flex items-center space-x-3">
-              <Link to="/customer-dashboard">
-                <Button variant="outline" iconName="User" iconPosition="left">
-                  Dashboard
-                </Button>
-              </Link>
+              {isAuthenticated() ? (
+                <div className="flex items-center space-x-3">
+                  {/* Notifications */}
+                  <NotificationDropdown />
+                  
+                  {/* Messages */}
+                  <Link to="/chat" className="relative">
+                    <Button variant="ghost" size="sm">
+                      <Icon name="MessageCircle" size={18} />
+                    </Button>
+                  </Link>
+                  
+                  {/* User Menu */}
+                  <div className="relative">
+                    <Button 
+                      variant="outline" 
+                      className="flex items-center gap-2"
+                      onClick={() => setShowUserMenu(!showUserMenu)}
+                    >
+                      {user?.avatar ? (
+                        <img 
+                          src={user.avatar} 
+                          alt={user.name} 
+                          className="w-6 h-6 rounded-full object-cover"
+                        />
+                      ) : (
+                        <Icon name="User" size={16} />
+                      )}
+                      <span>{user?.name?.split(' ')[0] || 'Account'}</span>
+                      <Icon name={showUserMenu ? 'ChevronUp' : 'ChevronDown'} size={14} />
+                    </Button>
+                    
+                    {showUserMenu && (
+                      <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-md shadow-md z-50">
+                        <div className="p-3 border-b border-border">
+                          <p className="font-medium truncate">{user?.name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                        </div>
+                        <div className="py-1">
+                          {isAdmin() && (
+                            <Link 
+                              to="/admin" 
+                              className="block px-4 py-2 text-sm hover:bg-muted transition-colors"
+                              onClick={() => setShowUserMenu(false)}
+                            >
+                              <Icon name="LayoutDashboard" size={14} className="inline mr-2" />
+                              Admin Dashboard
+                            </Link>
+                          )}
+                          <Link 
+                            to="/chat" 
+                            className="block px-4 py-2 text-sm hover:bg-muted transition-colors"
+                            onClick={() => setShowUserMenu(false)}
+                          >
+                            <Icon name="MessageCircle" size={14} className="inline mr-2" />
+                            Messages
+                          </Link>
+                          <Link 
+                            to="/notifications" 
+                            className="block px-4 py-2 text-sm hover:bg-muted transition-colors"
+                            onClick={() => setShowUserMenu(false)}
+                          >
+                            <Icon name="Bell" size={14} className="inline mr-2" />
+                            Notifications
+                          </Link>
+                        </div>
+                        <div className="border-t border-border py-1">
+                          <button
+                            onClick={handleLogout}
+                            className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                          >
+                            <Icon name="LogOut" size={14} className="inline mr-2" />
+                            Logout
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <Link to="/login">
+                    <Button variant="outline">Sign In</Button>
+                  </Link>
+                  <Link to="/register">
+                    <Button>Sign Up</Button>
+                  </Link>
+                </div>
+              )}
               <Button variant="default" iconName="Phone" iconPosition="left">
                 Book Service
               </Button>
@@ -130,16 +226,74 @@ const Header = () => {
               ))}
 
               <div className="pt-4 mt-4 border-t border-border space-y-2">
-                <Link to="/customer-dashboard" className="block">
-                  <Button
-                    variant="outline"
-                    fullWidth
-                    iconName="User"
-                    iconPosition="left"
-                  >
-                    Dashboard
-                  </Button>
-                </Link>
+                {isAuthenticated() ? (
+                  <>
+                    <Link to="/chat" className="block">
+                      <Button
+                        variant="outline"
+                        fullWidth
+                        iconName="MessageCircle"
+                        iconPosition="left"
+                      >
+                        Messages
+                      </Button>
+                    </Link>
+                    <Link to="/notifications" className="block">
+                      <Button
+                        variant="outline"
+                        fullWidth
+                        iconName="Bell"
+                        iconPosition="left"
+                      >
+                        Notifications
+                      </Button>
+                    </Link>
+                    {isAdmin() && (
+                      <Link to="/admin" className="block">
+                        <Button
+                          variant="outline"
+                          fullWidth
+                          iconName="LayoutDashboard"
+                          iconPosition="left"
+                        >
+                          Admin Dashboard
+                        </Button>
+                      </Link>
+                    )}
+                    <Button
+                      variant="outline"
+                      fullWidth
+                      iconName="LogOut"
+                      iconPosition="left"
+                      onClick={handleLogout}
+                    >
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/login" className="block">
+                      <Button
+                        variant="outline"
+                        fullWidth
+                        iconName="LogIn"
+                        iconPosition="left"
+                      >
+                        Sign In
+                      </Button>
+                    </Link>
+                    <Link to="/register" className="block">
+                      <Button
+                        variant="default"
+                        fullWidth
+                        iconName="UserPlus"
+                        iconPosition="left"
+                      >
+                        Sign Up
+                      </Button>
+                    </Link>
+                  </>
+                )}
                 <Button
                   variant="default"
                   fullWidth

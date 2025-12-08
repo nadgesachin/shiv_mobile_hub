@@ -28,14 +28,18 @@ const productSchema = new mongoose.Schema({
     publicId: String
   }],
   category: {
-    type: String,
-    required: true,
-    enum: ['smartphones', 'tablets', 'audio', 'wearables', 'accessories']
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category',
+    required: true
   },
-  subcategory: {
-    type: String,
-    enum: ['chargers', 'cases', 'power-banks', 'stylus', 'cables', 'screen-protectors']
-  },
+  categoryPath: [{
+    _id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Category'
+    },
+    name: String,
+    slug: String
+  }],
   brand: {
     type: String,
     required: true
@@ -106,8 +110,8 @@ const productSchema = new mongoose.Schema({
     default: 0
   },
   sections: [{
-    type: String,
-    enum: ['flash-deals', 'new-arrivals', 'top-accessories', 'featured-products']
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Section'
   }],
   isActive: {
     type: Boolean,

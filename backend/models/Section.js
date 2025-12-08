@@ -4,8 +4,11 @@ const sectionSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    enum: ['flash-deals', 'new-arrivals', 'top-accessories', 'featured-products'],
     unique: true
+  },
+  icon: {
+    type: String,
+    required: true
   },
   title: {
     type: String,

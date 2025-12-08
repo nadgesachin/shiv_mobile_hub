@@ -12,9 +12,9 @@ const adminAuth = passport.authenticate('jwt', { session: false });
 
 // Configure Cloudinary
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
+  cloud_name: 'dppoe8r21',
+  api_key: '962731654417822',
+  api_secret: '-uM2_DJQnway8ONuanZ-AhXDMSg'
 });
 
 // Configure Cloudinary storage for Multer

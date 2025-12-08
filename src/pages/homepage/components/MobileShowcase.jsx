@@ -56,107 +56,76 @@ const MobileShowcase = () => {
   // Current active category
   const [activeCategory, setActiveCategory] = useState('all');
   
-  // State for different carousels
-  const [dealSlideIndex, setDealSlideIndex] = useState(0);
-  const [newArrivalsIndex, setNewArrivalsIndex] = useState(0);
-  const [accessoriesIndex, setAccessoriesIndex] = useState(0);
-  
-  // Product state
+  // State for sections and products
+  const [sections, setSections] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  
+  // State for carousel indices - dynamic based on sections
+  const [slideIndices, setSlideIndices] = useState({});
 
-  // Fetch products from backend
+  async function getSections() {
+    try {
+      const response = await apiService.getSections();
+      setSections(response.data?.sections);
+      console.log("sections: ",response.data?.sections);
+    } catch (error) {
+      console.error('Error fetching sections:', error);
+      setError('Failed to load sections');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function getProducts() {
+    try {
+      const response = await apiService.getProducts();
+      console.log("products: ",response.data.products);
+      setProducts(response.data.products);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      setError('Failed to load products');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Fetch sections and products from backend
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await apiService.getProducts({ limit: 50 });
-        setProducts(response.data.products);
-        setError('');
-      } catch (err) {
-        console.error('Failed to fetch products:', err);
-        setError('Failed to load products');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
+    getSections()
+    getProducts()
   }, []);
   
-  // Reference to scroll containers
-  const dealsRef = useRef(null);
-  const newArrivalsRef = useRef(null);
-  const accessoriesRef = useRef(null);
+  // Reference to scroll containers - dynamic based on sections
+  const sectionRefs = useRef({});
   
-  // Category list for filters
-  const categories = [
-    { id: 'all', name: 'All' },
-    { id: 'smartphones', name: 'Smartphones' },
-    { id: 'accessories', name: 'Accessories' },
-    { id: 'tablets', name: 'Tablets' },
-    { id: 'audio', name: 'Audio' },
-    { id: 'wearables', name: 'Wearables' }
-  ];
-  
-  // Get dynamic product data from backend
-  const getDealsData = () => {
+  // Get products for a specific section
+  const getSectionProducts = () => {
     if (products.length === 0) return [];
     
-    return products
-      .filter(product => product.isActive && product.originalPrice > product.price)
-      .slice(0, 4)
+    return products.length > 0 &&  products
+      .filter(product => 
+        product.isActive && 
+        product.sections
+      )
+      .slice(0, 8)
       .map(product => ({
         id: product._id,
         title: product.name,
         price: product.price,
         originalPrice: product.originalPrice,
-        discount: `${Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF`,
+        discount: product.originalPrice > product.price 
+          ? `${Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF` 
+          : null,
         image: product.images?.[0]?.url || 'https://images.unsplash.com/photo-1707410420102-faff6eb0e033',
-        badgeText: product.badge || 'Hot Deal',
+        badgeText: product.badge,
         badgeColor: product.badge === 'New Arrival' ? 'bg-primary text-primary-foreground' : 
                     product.badge === 'Bestseller' ? 'bg-accent text-accent-foreground' :
                     'bg-success text-success-foreground',
         link: `/products-catalog`
       }));
   };
-
-  const getNewArrivals = () => {
-    if (products.length === 0) return [];
-    
-    return products
-      .filter(product => product.isActive && (product.badge === 'New Arrival' || product.badge === 'New Release'))
-      .slice(0, 4)
-      .map(product => ({
-        id: product._id,
-        title: product.name,
-        price: product.price,
-        originalPrice: product.originalPrice,
-        image: product.images?.[0]?.url || 'https://images.unsplash.com/photo-1707410420102-faff6eb0e033',
-        specs: product.specs?.slice(0, 3) || [],
-        link: `/products-catalog`
-      }));
-  };
-
-  const getAccessories = () => {
-    if (products.length === 0) return [];
-    
-    return products
-      .filter(product => product.isActive && product.category === 'accessories')
-      .slice(0, 6)
-      .map(product => ({
-        id: product._id,
-        title: product.name,
-        price: product.price,
-        originalPrice: product.originalPrice,
-        image: product.images?.[0]?.url || 'https://images.unsplash.com/photo-1707410420102-faff6eb0e033',
-        link: `/products-catalog`
-      }));
-  };
-
-  const dealData = getDealsData();
-  const newArrivals = getNewArrivals();
-  const accessories = getAccessories();
 
   // Quick access category cards
   const quickCategories = [
@@ -211,18 +180,29 @@ const MobileShowcase = () => {
   ];
 
   // Handling scrolling for carousels
-  const scrollCarousel = (direction, ref, setIndex, maxIndex) => {
-    if (ref.current) {
-      const container = ref.current;
-      const scrollAmount = container.clientWidth;
-      
-      if (direction === 'next' && scrollAmount) {
-        container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-        setIndex(prev => Math.min(prev + 1, maxIndex));
-      } else if (direction === 'prev' && scrollAmount) {
-        container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-        setIndex(prev => Math.max(prev - 1, 0));
-      }
+  const scrollCarousel = (direction, sectionId, productsLength) => {
+    const currentIndex = slideIndices[sectionId] || 0;
+    let newIndex;
+    
+    if (direction === 'next') {
+      newIndex = Math.min(currentIndex + 1, productsLength - 1);
+    } else {
+      newIndex = Math.max(currentIndex - 1, 0);
+    }
+    
+    setSlideIndices(prev => ({
+      ...prev,
+      [sectionId]: newIndex
+    }));
+    
+    // Scroll the container
+    const container = sectionRefs.current[sectionId];
+    if (container) {
+      const scrollAmount = 320; // Width of one card + gap
+      container.scrollTo({
+        left: newIndex * scrollAmount,
+        behavior: 'smooth'
+      });
     }
   };
   
@@ -230,179 +210,173 @@ const MobileShowcase = () => {
   const formatPrice = (price) => {
     return `₹${price.toLocaleString('en-IN')}`;
   };
-  
+
+  if (loading) {
+    return (
+      <section className="py-8 lg:py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">Loading...</div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="py-8 lg:py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center text-red-500">{error}</div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-8 lg:py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {loading ? (
-          <div className="space-y-8">
-            <div className="animate-pulse">
-              <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {[1, 2, 3, 4].map(i => (
-                  <div key={i} className="bg-gray-100 rounded-xl p-4">
-                    <div className="h-32 bg-gray-200 rounded-lg mb-4"></div>
-                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        ) : error ? (
-          <div className="text-center py-12">
-            <Icon name="AlertCircle" size={48} className="text-error mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-foreground mb-2">Unable to Load Products</h2>
-            <p className="text-muted-foreground mb-4">{error}</p>
-            <button 
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
-            >
-              Try Again
-            </button>
-          </div>
-        ) : (
-          <>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-headline font-bold text-foreground">
-                Mobile & Accessories
-              </h2>
-              <Link to="/products-catalog" className="flex items-center text-primary font-medium hover:underline">
-                View All
-                <Icon name="ArrowRight" size={16} className="ml-1" />
-              </Link>
-            </div>
-        
-        {/* Mobile-friendly categories bar */}
-        <div className="mb-6 overflow-x-auto hide-scrollbar">
-          <div className="flex space-x-2 pb-2">
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setActiveCategory(category.id)}
-                className={`px-4 py-2 whitespace-nowrap rounded-full text-sm font-medium transition-smooth ${
-                  activeCategory === category.id 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'bg-card border border-border text-foreground hover:bg-muted'
-                }`}
-              >
-                {category.name}
-              </button>
-            ))}
-          </div>
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-2">
+            Mobile Showcase
+          </h2>
+          <p className="text-muted-foreground">
+            Discover the latest in mobile technology
+          </p>
         </div>
-        
-        {/* Flash deals carousel */}
-        <div className="mb-10">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center">
-              <div className="text-lg font-bold text-destructive mr-2 flex items-center">
-                <Icon name="Zap" size={20} className="mr-1" />
-                Flash Deals
-              </div>
-              <div className="bg-destructive/10 text-destructive text-xs font-bold px-2 py-1 rounded">
-                Ending Soon
-              </div>
-            </div>
-            <div className="flex space-x-1">
-              <button 
-                onClick={() => scrollCarousel('prev', dealsRef, setDealSlideIndex, dealData.length - 1)}
-                disabled={dealSlideIndex === 0}
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  dealSlideIndex === 0 
-                    ? 'text-muted-foreground bg-muted cursor-not-allowed' 
-                    : 'text-foreground bg-card hover:bg-muted'
-                }`}
-              >
-                <Icon name="ChevronLeft" size={16} />
-              </button>
-              <button 
-                onClick={() => scrollCarousel('next', dealsRef, setDealSlideIndex, dealData.length - 1)}
-                disabled={dealSlideIndex === dealData.length - 1}
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  dealSlideIndex === dealData.length - 1 
-                    ? 'text-muted-foreground bg-muted cursor-not-allowed' 
-                    : 'text-foreground bg-card hover:bg-muted'
-                }`}
-              >
-                <Icon name="ChevronRight" size={16} />
-              </button>
-            </div>
-          </div>
-          <SwipeableContainer
-            onSwipeLeft={() => scrollCarousel('next', dealsRef, setDealSlideIndex, dealData.length - 1)}
-            onSwipeRight={() => scrollCarousel('prev', dealsRef, setDealSlideIndex, dealData.length - 1)}
-          >
-            <div 
-              className="flex space-x-4 overflow-x-auto hide-scrollbar snap-x snap-mandatory pb-4" 
-              ref={dealsRef}
-            >
-              {dealData.map((deal) => (
-                <Link 
-                  to={deal.link} 
-                  key={deal.id} 
-                  className="snap-start flex-none w-[280px] sm:w-[320px] group"
-                >
-                  <div className="bg-card rounded-xl border border-border overflow-hidden shadow-soft hover:shadow-medium transition-smooth h-full">
-                    <div className="relative h-48 overflow-hidden">
-                      <Image
-                        src={deal.image}
-                        alt={deal.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-smooth"
-                      />
-                      <div className="absolute top-3 left-3 px-3 py-1 text-xs font-semibold rounded-md flex items-center space-x-1 whitespace-nowrap shadow-md backdrop-blur-sm bg-background/70">
-                        <Icon name="Fire" size={14} color="var(--color-destructive)" />
-                        <span className="text-destructive">{deal.discount}</span>
-                      </div>
-                      {deal.badgeText && (
-                        <div className={`absolute top-3 right-3 px-3 py-1 ${deal.badgeColor} text-xs font-semibold rounded-md`}>
-                          {deal.badgeText}
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-4">
-                      <h3 className="text-base font-semibold text-foreground mb-2 line-clamp-1">{deal.title}</h3>
-                      <div className="flex items-baseline space-x-2 mb-1">
-                        <span className="text-lg font-bold text-primary">{formatPrice(deal.price)}</span>
-                        {deal.originalPrice && (
-                          <span className="text-sm text-muted-foreground line-through">
-                            {formatPrice(deal.originalPrice)}
-                          </span>
-                        )}
-                      </div>
-                      <div className="mt-2">
-                        <div className="text-xs text-success font-medium flex items-center">
-                          <Icon name="Check" size={12} className="mr-1" />
-                          In Stock
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </SwipeableContainer>
+
+        {/* Dynamic Sections */}
+        {sections.length > 0 && sections?.map((section) => {
+          const sectionProducts = getSectionProducts();
+          const currentIndex = slideIndices[section._id] || 0;
+          console.log("sectionProducts: ",sectionProducts); 
+          if (sectionProducts.length === 0) return null;
           
-          <div className="flex justify-center mt-4">
-            {dealData.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => {
-                  if (dealsRef.current) {
-                    const container = dealsRef.current;
-                    const scrollAmount = container.clientWidth;
-                    container.scrollTo({ left: scrollAmount * index, behavior: 'smooth' });
-                    setDealSlideIndex(index);
-                  }
-                }}
-                className={`w-2 h-2 rounded-full mx-1 ${
-                  dealSlideIndex === index ? 'bg-primary' : 'bg-muted'
-                }`}
-              />
-            ))}
-          </div>
-        </div>
-        
+          return (
+            <div key={section._id} className="mb-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center">
+                  <div className="text-lg font-bold text-foreground mr-2 flex items-center">
+                    <Icon name={section.icon || 'Grid3x3'} size={20} className="mr-1" />
+                    {section.title}
+                  </div>
+                  {section.slug === 'flash-deals' && (
+                    <div className="bg-destructive/10 text-destructive text-xs font-bold px-2 py-1 rounded">
+                      Ending Soon
+                    </div>
+                  )}
+                </div>
+                {sectionProducts.length > 1 && (
+                  <div className="flex space-x-1">
+                    <button 
+                      onClick={() => scrollCarousel('prev', section._id, sectionProducts.length)}
+                      disabled={currentIndex === 0}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        currentIndex === 0 
+                          ? 'text-muted-foreground bg-muted cursor-not-allowed' 
+                          : 'text-foreground bg-card hover:bg-muted'
+                      }`}
+                    >
+                      <Icon name="ChevronLeft" size={16} />
+                    </button>
+                    <button 
+                      onClick={() => scrollCarousel('next', section._id, sectionProducts.length)}
+                      disabled={currentIndex === sectionProducts.length - 1}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        currentIndex === sectionProducts.length - 1 
+                          ? 'text-muted-foreground bg-muted cursor-not-allowed' 
+                          : 'text-foreground bg-card hover:bg-muted'
+                      }`}
+                    >
+                      <Icon name="ChevronRight" size={16} />
+                    </button>
+                  </div>
+                )}
+              </div>
+              <SwipeableContainer
+                onSwipeLeft={() => scrollCarousel('next', section._id, sectionProducts.length)}
+                onSwipeRight={() => scrollCarousel('prev', section._id, sectionProducts.length)}
+              >
+                <div 
+                  className="flex space-x-4 overflow-x-auto hide-scrollbar snap-x snap-mandatory pb-4" 
+                  ref={el => sectionRefs.current[section._id] = el}
+                >
+                  { sectionProducts.length > 0 && sectionProducts.map((product) => (
+                    <Link 
+                      to={product.link} 
+                      key={product.id} 
+                      className="snap-start flex-none w-[280px] sm:w-[320px] group"
+                    >
+                      <div className="bg-card rounded-xl border border-border overflow-hidden shadow-soft hover:shadow-medium transition-smooth h-full">
+                        <div className="relative h-48 overflow-hidden">
+                          <Image
+                            src={product.image}
+                            alt={product.title}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-smooth"
+                          />
+                          {product.discount && (
+                            <div className="absolute top-3 left-3 px-3 py-1 text-xs font-semibold rounded-md flex items-center space-x-1 whitespace-nowrap shadow-md backdrop-blur-sm bg-background/70">
+                              <Icon name="Fire" size={14} color="var(--color-destructive)" />
+                              <span className="text-destructive">{product.discount}</span>
+                            </div>
+                          )}
+                          {product.badgeText && (
+                            <div className={`absolute top-3 right-3 px-3 py-1 ${product.badgeColor} text-xs font-semibold rounded-md`}>
+                              {product.badgeText}
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-4">
+                          <h3 className="text-base font-semibold text-foreground mb-2 line-clamp-1">{product.title}</h3>
+                          <div className="flex items-baseline space-x-2 mb-1">
+                            <span className="text-lg font-bold text-primary">{formatPrice(product.price)}</span>
+                            {product.originalPrice && (
+                              <span className="text-sm text-muted-foreground line-through">
+                                {formatPrice(product.originalPrice)}
+                              </span>
+                            )}
+                          </div>
+                          <div className="mt-2">
+                            <div className="text-xs text-success font-medium flex items-center">
+                              <Icon name="Check" size={12} className="mr-1" />
+                              In Stock
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </SwipeableContainer>
+              
+              {sectionProducts.length > 1 && (
+                <div className="flex justify-center mt-4">
+                  {sectionProducts.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        setSlideIndices(prev => ({ ...prev, [section._id]: index }));
+                        const container = sectionRefs.current[section._id];
+                        if (container) {
+                          const scrollAmount = 320;
+                          container.scrollTo({
+                            left: index * scrollAmount,
+                            behavior: 'smooth'
+                          });
+                        }
+                      }}
+                      className={`w-2 h-2 rounded-full mx-1 transition-colors ${
+                        index === currentIndex 
+                          ? 'bg-primary' 
+                          : 'bg-muted hover:bg-muted-foreground/30'
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+
         {/* Quick access category cards */}
         <div className="mb-10">
           <h3 className="text-lg font-semibold text-foreground mb-4">
@@ -423,182 +397,16 @@ const MobileShowcase = () => {
             ))}
           </div>
         </div>
-        
-        {/* New Arrivals Section */}
-        <div className="mb-10">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-foreground flex items-center">
-              <Icon name="Star" size={18} className="mr-2 text-warning" />
-              New Arrivals
-            </h3>
-            <div className="flex space-x-1">
-              <button 
-                onClick={() => scrollCarousel('prev', newArrivalsRef, setNewArrivalsIndex, newArrivals.length - 1)}
-                disabled={newArrivalsIndex === 0}
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  newArrivalsIndex === 0 
-                    ? 'text-muted-foreground bg-muted cursor-not-allowed' 
-                    : 'text-foreground bg-card hover:bg-muted'
-                }`}
-              >
-                <Icon name="ChevronLeft" size={16} />
-              </button>
-              <button 
-                onClick={() => scrollCarousel('next', newArrivalsRef, setNewArrivalsIndex, newArrivals.length - 1)}
-                disabled={newArrivalsIndex === newArrivals.length - 1}
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  newArrivalsIndex === newArrivals.length - 1 
-                    ? 'text-muted-foreground bg-muted cursor-not-allowed' 
-                    : 'text-foreground bg-card hover:bg-muted'
-                }`}
-              >
-                <Icon name="ChevronRight" size={16} />
-              </button>
-            </div>
-          </div>
-          <SwipeableContainer
-            onSwipeLeft={() => scrollCarousel('next', newArrivalsRef, setNewArrivalsIndex, newArrivals.length - 1)}
-            onSwipeRight={() => scrollCarousel('prev', newArrivalsRef, setNewArrivalsIndex, newArrivals.length - 1)}
-          >
-            <div 
-              className="flex space-x-4 overflow-x-auto hide-scrollbar snap-x snap-mandatory pb-4" 
-              ref={newArrivalsRef}
-            >
-              {newArrivals.map((item) => (
-                <Link 
-                  to={item.link} 
-                  key={item.id} 
-                  className="snap-start flex-none w-[280px] sm:w-[320px] group"
-                >
-                  <div className="bg-card rounded-xl border border-border overflow-hidden shadow-soft hover:shadow-medium transition-smooth h-full">
-                    <div className="relative h-48 overflow-hidden">
-                      <div className="absolute top-3 left-3 px-3 py-1 bg-primary/80 text-primary-foreground text-xs font-semibold rounded-md">
-                        New Arrival
-                      </div>
-                      <Image
-                        src={item.image}
-                        alt={item.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-smooth"
-                      />
-                    </div>
-                    <div className="p-4">
-                      <h3 className="text-base font-semibold text-foreground mb-2 line-clamp-1">{item.title}</h3>
-                      <div className="flex flex-wrap gap-1 mb-3">
-                        {item.specs.map((spec, index) => (
-                          <span key={index} className="text-xs px-2 py-1 bg-muted rounded-md text-muted-foreground">
-                            {spec}
-                          </span>
-                        ))}
-                      </div>
-                      <div className="flex items-baseline space-x-2">
-                        <span className="text-lg font-bold text-primary">{formatPrice(item.price)}</span>
-                        {item.originalPrice && (
-                          <span className="text-sm text-muted-foreground line-through">
-                            {formatPrice(item.originalPrice)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </SwipeableContainer>
-        </div>
-        
-        {/* Accessories Section */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-foreground flex items-center">
-              <Icon name="Cable" size={18} className="mr-2 text-accent" />
-              Top Accessories
-            </h3>
-            <div className="flex space-x-1">
-              <button 
-                onClick={() => scrollCarousel('prev', accessoriesRef, setAccessoriesIndex, Math.ceil(accessories.length/2) - 1)}
-                disabled={accessoriesIndex === 0}
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  accessoriesIndex === 0 
-                    ? 'text-muted-foreground bg-muted cursor-not-allowed' 
-                    : 'text-foreground bg-card hover:bg-muted'
-                }`}
-              >
-                <Icon name="ChevronLeft" size={16} />
-              </button>
-              <button 
-                onClick={() => scrollCarousel('next', accessoriesRef, setAccessoriesIndex, Math.ceil(accessories.length/2) - 1)}
-                disabled={accessoriesIndex === Math.ceil(accessories.length/2) - 1}
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  accessoriesIndex === Math.ceil(accessories.length/2) - 1 
-                    ? 'text-muted-foreground bg-muted cursor-not-allowed' 
-                    : 'text-foreground bg-card hover:bg-muted'
-                }`}
-              >
-                <Icon name="ChevronRight" size={16} />
-              </button>
-            </div>
-          </div>
-          <SwipeableContainer
-            onSwipeLeft={() => scrollCarousel('next', accessoriesRef, setAccessoriesIndex, Math.ceil(accessories.length/2) - 1)}
-            onSwipeRight={() => scrollCarousel('prev', accessoriesRef, setAccessoriesIndex, Math.ceil(accessories.length/2) - 1)}
-          >
-            <div 
-              className="grid grid-cols-2 sm:grid-cols-3 gap-4 overflow-x-auto hide-scrollbar snap-x snap-mandatory pb-4" 
-              ref={accessoriesRef}
-            >
-              {accessories.map((item) => (
-                <Link 
-                  to={item.link} 
-                  key={item.id} 
-                  className="snap-start"
-                >
-                  <div className="bg-card rounded-lg border border-border overflow-hidden shadow-soft hover:shadow-medium transition-smooth h-full">
-                    <div className="relative h-32 overflow-hidden">
-                      <Image
-                        src={item.image}
-                        alt={item.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-smooth"
-                      />
-                      <div className="absolute bottom-0 left-0 right-0 px-2 py-1 bg-background/80 backdrop-blur-sm">
-                        <span className="text-xs font-medium text-foreground">
-                          {item.category}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="p-3">
-                      <h3 className="text-sm font-medium text-foreground mb-1 line-clamp-1">{item.title}</h3>
-                      <div className="flex items-baseline space-x-2">
-                        <span className="text-sm font-bold text-primary">{formatPrice(item.price)}</span>
-                        {item.originalPrice && (
-                          <span className="text-xs text-muted-foreground line-through">
-                            {formatPrice(item.originalPrice)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </SwipeableContainer>
-        </div>
-        
-        {/* View all products CTA */}
-        <div className="flex justify-center mt-8">
+
+        {/* View All Products Button */}
+        <div className="text-center">
           <Link to="/products-catalog">
-            <Button 
-              variant="outline" 
-              size="lg" 
-              iconName="ShoppingBag" 
-              iconPosition="left"
-              className="shadow-soft hover:shadow-medium"
-            >
+            <Button variant="outline" size="lg">
               View All Products
+              <Icon name="ArrowRight" size={16} className="ml-2" />
             </Button>
           </Link>
         </div>
-        </>
-        )}
       </div>
     </section>
   );

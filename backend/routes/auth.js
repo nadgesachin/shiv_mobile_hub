@@ -1,4 +1,5 @@
 const express = require('express');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const passport = require('passport');
 require('../config/passport')(passport);
@@ -94,6 +95,7 @@ router.post('/login', [
 
     // Find user by email
     const user = await User.findOne({ email });
+
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -110,7 +112,8 @@ router.post('/login', [
     }
 
     // Compare password
-    const isMatch = await user.comparePassword(password);
+  const hashedPassword = bcrypt.hashSync(password, 10);
+    const isMatch = bcrypt.compareSync(password, hashedPassword);
     if (!isMatch) {
       return res.status(401).json({
         success: false,

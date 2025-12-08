@@ -16,6 +16,7 @@ const ProductsManagement = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [categories, setCategories] = useState([]);
   const [pagination, setPagination] = useState({
     current: 1,
     pages: 1,
@@ -23,14 +24,28 @@ const ProductsManagement = () => {
     limit: 20
   });
 
-  const categories = [
-    { id: 'all', name: 'All Categories' },
-    { id: 'smartphones', name: 'Smartphones' },
-    { id: 'tablets', name: 'Tablets' },
-    { id: 'audio', name: 'Audio' },
-    { id: 'wearables', name: 'Wearables' },
-    { id: 'accessories', name: 'Accessories' }
-  ];
+  useEffect(() => {
+    if(localStorage.getItem('categories-product')) {
+      setCategories(JSON.parse(localStorage.getItem('categories')));
+    } else {
+      fetchCategories();
+    }
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const query = {
+        type: 'product'
+      };
+      const response = await apiService.getCategories(query, false);
+      if(response.data){
+        setCategories(response.data);
+        localStorage.setItem('categories-product', JSON.stringify(response.data));
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to fetch categories');
+    }
+  };
 
   // Fetch products
   const fetchProducts = async (params = {}) => {
@@ -154,6 +169,12 @@ const ProductsManagement = () => {
     fetchProducts({ page });
   };
 
+  // Handle clear filter
+  const handleClearFilter = () => {
+    setSelectedCategory('all'); // Reset to all category
+    fetchProducts({}); // Fetch all products without filter
+  };
+
   if (loading && products.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -206,17 +227,23 @@ const ProductsManagement = () => {
 
           {/* Category Filter */}
           <div className="sm:w-48">
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              {categories.map(category => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
+            <div className="flex items-center gap-2">
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="all">All Categories</option>
+                {categories.map(category => (
+                  <option key={category._id} value={category._id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+              <Button variant="outline" size="sm" onClick={handleClearFilter}>
+                Clear Filter
+              </Button>
+            </div>
           </div>
 
           {/* Refresh Button */}
