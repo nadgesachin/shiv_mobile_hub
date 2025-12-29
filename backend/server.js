@@ -11,6 +11,7 @@ const http = require('http');
 const { initializeSocket } = require('./socket');
 
 // Import routes
+const seedRoutes = require('./routes/seed');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const productRoutes = require('./routes/products');
@@ -53,14 +54,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
 // Connect to MongoDB
-mongoose.connect('mongodb://localhost:27017/shiv-mobile-hub', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
+mongoose.connect(process.env.MONGODB_URI)
 .then(() => {
   console.log('MongoDB connected successfully');
-  console.log('Connected to database: shiv-mobile-hub');
-  console.log('Server starting on http://localhost:5000');
 })
 .catch(err => {
   console.error('MongoDB connection error:', err);
@@ -80,7 +76,7 @@ app.use('/api/messages', auth, messageRoutes);
 app.use('/api/notifications', auth, notificationRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/pages', pageRoutes);
-
+app.use('/api/seed', seedRoutes);
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ 

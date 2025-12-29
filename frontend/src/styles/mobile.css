@@ -1,0 +1,166 @@
+/* Mobile-optimized styles */
+
+/* Custom scrollbar for mobile */
+.hide-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Scroll snap utilities */
+.snap-x {
+  scroll-snap-type: x mandatory;
+}
+
+.snap-start {
+  scroll-snap-align: start;
+}
+
+/* Touch target enhancement */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Fast touch feedback */
+.tap-highlight {
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+
+/* Custom mobile animations */
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+.animate-ripple {
+  animation: ripple 0.6s ease-out;
+}
+
+/* Text sizing */
+.text-2xs {
+  font-size: 0.625rem; /* 10px */
+  line-height: 0.75rem; /* 12px */
+}
+
+/* Nested truncate */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Enhanced skeleton loaders */
+.skeleton-pulse {
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-pulse::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, 
+    rgba(255,255,255, 0) 0%, 
+    rgba(255,255,255, 0.2) 50%, 
+    rgba(255,255,255, 0) 100%);
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Better touch targets for mobile forms */
+@media (max-width: 768px) {
+  input,
+  select,
+  textarea,
+  button {
+    font-size: 16px !important; /* Prevents iOS zoom on focus */
+  }
+  
+  input[type="checkbox"],
+  input[type="radio"] {
+    min-width: 20px;
+    min-height: 20px;
+  }
+}
+
+/* Mobile-first utility classes */
+.grid-mobile-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Bottom sheet common styles */
+.bottom-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 16px 16px 0 0;
+  z-index: 50;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Pull-to-refresh indicator */
+.pull-indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50px;
+  width: 100%;
+  color: #9ca3af;
+}
+
+/* Optimized mobile shadows - lightweight */
+.shadow-mobile-sm {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.shadow-mobile {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* Fix 100vh issue on mobile browsers */
+.mobile-screen {
+  height: 100vh;
+  height: -webkit-fill-available;
+  height: stretch;
+}
+
+/* Mobile swipe indicator */
+.swipe-indicator {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background-color: #e5e7eb;
+  margin: 6px auto;
+}

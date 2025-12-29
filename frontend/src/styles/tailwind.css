@@ -1,5 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,55 +8,69 @@
 
 @layer base {
   :root {
-    /* Primary Colors - Deep trust blue */
-    --color-primary: #1e40af; /* blue-800 */
+    /* Premium Primary Colors - Modern dark blue */
+    --color-primary: #0f172a; /* slate-900 */
+    --color-primary-light: #334155; /* slate-700 */
+    --color-primary-dark: #020617; /* slate-950 */
     --color-primary-foreground: #ffffff; /* white */
     
-    /* Secondary Colors - Professional teal */
-    --color-secondary: #0f766e; /* teal-700 */
+    /* Premium Secondary Colors - Apple-inspired blue */
+    --color-secondary: #0284c7; /* sky-600 */
+    --color-secondary-light: #38bdf8; /* sky-400 */
+    --color-secondary-dark: #0c4a6e; /* sky-900 */
     --color-secondary-foreground: #ffffff; /* white */
     
-    /* Accent Colors - Confident red for CTAs */
-    --color-accent: #dc2626; /* red-600 */
+    /* Premium Accent Colors - Flipkart-inspired*/
+    --color-accent: #7e22ce; /* purple-700 */
+    --color-accent-light: #a855f7; /* purple-500 */
+    --color-accent-dark: #581c87; /* purple-900 */
     --color-accent-foreground: #ffffff; /* white */
     
     /* Background Colors */
-    --color-background: #fefefe; /* near-white */
-    --color-foreground: #1f2937; /* gray-800 */
+    --color-background: #ffffff; /* pure white for cleanliness */
+    --color-background-subtle: #fafafa; /* slightly off-white for subtle contrast */
+    --color-foreground: #0f172a; /* slate-900 */
     
     /* Surface Colors */
-    --color-card: #f8fafc; /* slate-50 */
-    --color-card-foreground: #1f2937; /* gray-800 */
+    --color-card: #ffffff; /* white */
+    --color-card-foreground: #0f172a; /* slate-900 */
     --color-popover: #ffffff; /* white */
-    --color-popover-foreground: #1f2937; /* gray-800 */
+    --color-popover-foreground: #0f172a; /* slate-900 */
     
     /* Muted Colors */
-    --color-muted: #f1f5f9; /* slate-100 */
-    --color-muted-foreground: #6b7280; /* gray-500 */
+    --color-muted: #f8fafc; /* slate-50 */
+    --color-muted-foreground: #64748b; /* slate-500 */
     
     /* Border & Input */
-    --color-border: #e5e7eb; /* gray-200 */
-    --color-input: #e5e7eb; /* gray-200 */
-    --color-ring: #1e40af; /* blue-800 */
+    --color-border: #e2e8f0; /* slate-200 */
+    --color-input: #f1f5f9; /* slate-100 */
+    --color-ring: #0284c7; /* sky-600 */
     
     /* Status Colors */
-    --color-success: #059669; /* emerald-600 */
+    --color-success: #10b981; /* emerald-500 */
     --color-success-foreground: #ffffff; /* white */
-    --color-warning: #d97706; /* amber-600 */
+    --color-warning: #f59e0b; /* amber-500 */
     --color-warning-foreground: #ffffff; /* white */
-    --color-error: #dc2626; /* red-600 */
+    --color-error: #ef4444; /* red-500 */
     --color-error-foreground: #ffffff; /* white */
-    --color-destructive: #dc2626; /* red-600 */
+    --color-destructive: #ef4444; /* red-500 */
     --color-destructive-foreground: #ffffff; /* white */
     
     /* Additional Brand Colors */
     --color-trust-builder: #6366f1; /* indigo-500 */
     --color-trust-builder-foreground: #ffffff; /* white */
-    --color-conversion-accent: #f59e0b; /* amber-500 */
-    --color-conversion-accent-foreground: #1f2937; /* gray-800 */
+    --color-conversion-accent: #f97316; /* orange-500 - Flipkart-inspired */
+    --color-conversion-accent-foreground: #ffffff; /* white */
+    
+    /* Gradient Colors */
+    --gradient-primary: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+    --gradient-secondary: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
+    --gradient-accent: linear-gradient(135deg, #7e22ce 0%, #a855f7 100%);
+    --gradient-cta: linear-gradient(135deg, #7e22ce 0%, #0284c7 100%);
+    --gradient-surface: linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.8) 100%);
     
     /* Typography */
-    --font-headline: 'Inter', sans-serif;
+    --font-headline: 'Plus Jakarta Sans', sans-serif;
     --font-body: 'Inter', sans-serif;
     --font-accent: 'JetBrains Mono', monospace;
     
@@ -63,19 +78,34 @@
     --spacing-base: 8px;
     --spacing-content: 24px;
     
-    /* Shadows */
-    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    /* Shadows - More premium and subtle */
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.03), 0 2px 4px rgba(0,0,0,0.03);
+    --shadow-md: 0 2px 4px rgba(0,0,0,0.05), 0 4px 8px rgba(0,0,0,0.05);
+    --shadow-lg: 0 4px 6px rgba(0,0,0,0.05), 0 10px 15px rgba(0,0,0,0.05);
+    --shadow-xl: 0 10px 25px rgba(0,0,0,0.05), 0 15px 50px rgba(0,0,0,0.08);
+    --shadow-elevated: 0 10px 40px rgba(0,0,0,0.12);
+    --shadow-soft-colored: 0 5px 15px rgba(2, 132, 199, 0.15); /* sky-600 shadow */
+    --shadow-card-hover: 0 10px 40px rgba(0, 0, 0, 0.12);
+    --shadow-navbar: 0 4px 20px rgba(15, 23, 42, 0.08);
+    
+    /* Glass Effects */
+    --glass-background: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.5);
+    --glass-blur: 12px;
     
     /* Border Radius */
-    --radius-sm: 4px;
-    --radius-md: 8px;
-    --radius-lg: 12px;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+    --radius-full: 9999px;
     
-    /* Transitions */
+    /* Transitions - More premium, smoother animation curves */
     --transition-base: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    --transition-smooth: 0.4s cubic-bezier(0.65, 0, 0.35, 1);
     --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: 0.6s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .dark {

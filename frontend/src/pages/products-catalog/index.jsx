@@ -148,34 +148,35 @@ const ProductsCatalog = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <div className="bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 py-12 lg:py-16">
+      <div className="bg-gradient-to-br from-white via-primary/5 to-white border-b border-gray-100 py-10 lg:py-14">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl lg:text-4xl font-headline font-bold text-foreground mb-3">
+          <div className="text-center mb-8 animate-fadeInDown">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-headline font-bold text-foreground mb-3">
               Mobile & Accessories Catalog
             </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
               Discover the latest smartphones, tablets, audio devices, wearables, and accessories
             </p>
           </div>
 
           {/* Search bar */}
-          <div className="flex flex-col lg:flex-row items-center gap-4 max-w-4xl mx-auto">
+          <div className="flex flex-col sm:flex-row items-center gap-3 max-w-4xl mx-auto mb-6">
             <div className="flex-1 w-full">
               <div className="relative">
+                <Icon name="Search" size={18} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground pointer-events-none" />
                 <Input
                   type="search"
-                  placeholder="Search for products, brands, or features..."
+                  placeholder="Search products, brands, features..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e?.target?.value)}
-                  className="w-full pr-10"
+                  className="w-full pl-11 pr-10"
                 />
                 <button
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   onClick={() => setSearchQuery('')}
                   aria-label="Clear search"
                 >
-                  {searchQuery && <Icon name="X" size={16} />}
+                  {searchQuery && <Icon name="X" size={18} />}
                 </button>
               </div>
             </div>
@@ -186,25 +187,26 @@ const ProductsCatalog = () => {
               iconPosition="left"
               onClick={handleSearch}
               disabled={isSearching}
+              className="w-full sm:w-auto"
             >
               {isSearching ? 'Searching...' : 'Search'}
             </Button>
           </div>
 
           {/* Mobile-friendly category selector */}
-          <div className="py-4 overflow-x-auto hide-scrollbar">
-            <div className="flex space-x-3 pb-1">
+          <div className="py-2 overflow-x-auto hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+            <div className="flex gap-2 pb-2">
               {categoryOptions.map((category) => (
                 <button
                   key={category.id}
                   onClick={() => setCurrentCategory(category.id)}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-full whitespace-nowrap transition-smooth ${currentCategory === category.id
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-card border border-border text-foreground hover:bg-muted'
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-full whitespace-nowrap font-medium text-sm transition-all duration-200 touch-target ${currentCategory === category.id
+                    ? 'bg-primary text-primary-foreground shadow-soft'
+                    : 'bg-white border border-gray-200 text-foreground hover:border-primary hover:bg-gray-50'
                     }`}
                 >
                   <Icon name={category.icon} size={16} />
-                  <span className="font-medium text-sm">{category.name}</span>
+                  <span className="hidden sm:inline">{category.name}</span>
                 </button>
               ))}
             </div>
@@ -213,46 +215,51 @@ const ProductsCatalog = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-gray-100">
           <div>
-            <p className="text-sm text-muted-foreground">
-              Showing <span className="font-semibold text-foreground">{filteredProducts.length > 0 ? filteredProducts.length : products.length}</span> products
+            <p className="text-sm font-medium text-foreground">
+              <span className="font-semibold text-lg">{filteredProducts.length > 0 ? filteredProducts.length : products.length}</span>
+              <span className="text-muted-foreground ml-2">products found</span>
             </p>
             {currentCategory !== 'all' && (
-              <p className="text-xs text-primary mt-1">
-                Category: {categoryOptions.find(c => c.id === currentCategory)?.name}
+              <p className="text-xs text-primary mt-2 font-medium">
+                📁 {categoryOptions.find(c => c.id === currentCategory)?.name}
               </p>
             )}
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
             <Select
               value={sortBy}
               onChange={setSortBy}
               options={sortOptions}
-              className="min-w-[180px]"
+              className="w-full sm:min-w-[200px]"
             />
-            <div className="flex items-center space-x-1 border border-border rounded-md p-1">
+            <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-1">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-2 rounded transition-smooth ${viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                aria-label="Grid view">
-                <Icon name="Grid" size={16} />
+                className={`p-2.5 rounded-md transition-all duration-200 touch-target ${viewMode === 'grid' ? 'bg-primary text-primary-foreground shadow-soft' : 'text-muted-foreground hover:text-foreground hover:bg-gray-50'}`}
+                aria-label="Grid view"
+                title="Grid view">
+                <Icon name="Grid" size={18} />
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`p-2 rounded transition-smooth ${viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                aria-label="List view">
-                <Icon name="List" size={16} />
+                className={`p-2.5 rounded-md transition-all duration-200 touch-target ${viewMode === 'list' ? 'bg-primary text-primary-foreground shadow-soft' : 'text-muted-foreground hover:text-foreground hover:bg-gray-50'}`}
+                aria-label="List view"
+                title="List view">
+                <Icon name="List" size={18} />
               </button>
             </div>
 
             {comparisonProducts?.length > 0 && (
               <Button
                 variant="outline"
+                size="sm"
                 iconName="GitCompare"
                 iconPosition="left"
-                onClick={() => setShowComparison(true)}>
+                onClick={() => setShowComparison(true)}
+                className="w-full sm:w-auto">
                 Compare ({comparisonProducts?.length})
               </Button>
             )}
@@ -261,10 +268,10 @@ const ProductsCatalog = () => {
 
         <div className="grid grid-cols-1 gap-8">
           <div className="col-span-1">
-            <div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6' : 'grid-cols-1'}`}
+            <div className={`grid gap-4 sm:gap-5 lg:gap-6 ${viewMode === 'grid' ? 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' : 'grid-cols-1'}`}
             >
               {(filteredProducts.length > 0 ? filteredProducts : products).map((product) => (
-                <div key={product?.id} className="relative">
+                <div key={product?.id} className="relative group animate-fadeInUp">
                   <ProductCard
                     product={product}
                     onAddToCart={handleAddToCart}
@@ -274,11 +281,12 @@ const ProductsCatalog = () => {
                   />
                   <button
                     onClick={() => handleAddToComparison(product)}
-                    className="absolute top-3 left-3 w-10 h-10 bg-background/90 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 hover:opacity-100 transition-smooth"
+                    className="absolute top-4 left-4 w-10 h-10 bg-white shadow-soft rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:shadow-medium touch-target"
                     aria-label="Add to comparison"
                     disabled={comparisonProducts?.length >= 3}
+                    title={comparisonProducts?.length >= 3 ? "Maximum 3 products for comparison" : "Add to comparison"}
                   >
-                    <Icon name="GitCompare" size={18} />
+                    <Icon name="GitCompare" size={18} className="text-primary" />
                   </button>
                 </div>
               ))}

@@ -8,6 +8,7 @@ import CSCPortal from './pages/csc-portal';
 import ServicesHub from './pages/services-hub';
 import ProductsCatalog from './pages/products-catalog';
 import Homepage from './pages/homepage';
+import MobileHomepageContainer from './pages/homepage/MobileHomepageContainer';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
@@ -69,12 +70,12 @@ const Routes = () => {
         } />
         
         {/* Public Routes */}
-        <Route path="/" element={<Homepage />} />
+        <Route path="/" element={<MobileHomepageContainer />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/csc-portal" element={<CSCPortal />} />
         <Route path="/services-hub" element={<ServicesHub />} />
         <Route path="/products-catalog" element={<ProductsCatalog />} />
-        <Route path="/homepage" element={<Homepage />} />
+        <Route path="/homepage" element={<MobileHomepageContainer />} />
         
         {/* Fallback Route */}
         <Route path="*" element={<NotFound />} />

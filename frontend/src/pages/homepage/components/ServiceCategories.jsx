@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import Icon from '../../../components/AppIcon';
 import Image from '../../../components/AppImage';
 import apiService from '../../../services/api';
+import { HoverScale, Interactive, ScrollReveal, ShimmerLoader } from '../../../components/ui/animations';
 
 const ServiceCategories = () => {
   const [services, setServices] = useState([]);
@@ -97,27 +99,25 @@ const ServiceCategories = () => {
 
   if (loading) {
     return (
-      <section className="bg-muted py-12 lg:py-16">
+      <section className="bg-gradient-to-b from-white to-muted py-12 lg:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <div className="animate-pulse">
-              <div className="h-10 bg-gray-200 rounded w-1/3 mx-auto mb-4"></div>
-              <div className="h-6 bg-gray-200 rounded w-1/2 mx-auto"></div>
-            </div>
+            <ShimmerLoader className="h-12 w-1/3 mx-auto mb-4 rounded-xl" />
+            <ShimmerLoader className="h-6 w-1/2 mx-auto rounded-lg" />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} className="animate-pulse">
-                <div className="bg-gray-200 h-48 rounded-t-xl"></div>
-                <div className="p-6 bg-white rounded-b-xl">
-                  <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-full mb-4"></div>
-                  <div className="grid grid-cols-2 gap-2 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="rounded-2xl overflow-hidden bg-white shadow-sm border border-gray-100">
+                <ShimmerLoader className="h-52 w-full rounded-t-2xl" />
+                <div className="p-6">
+                  <ShimmerLoader className="h-7 w-3/4 rounded-lg mb-4" />
+                  <ShimmerLoader className="h-4 w-full rounded mb-4" />
+                  <div className="grid grid-cols-2 gap-3 mb-6">
                     {[1, 2, 3, 4].map(j => (
-                      <div key={j} className="h-4 bg-gray-200 rounded"></div>
+                      <ShimmerLoader key={j} className="h-4 rounded" />
                     ))}
                   </div>
-                  <div className="h-12 bg-gray-200 rounded"></div>
+                  <ShimmerLoader className="h-12 w-full rounded-xl mt-6" />
                 </div>
               </div>
             ))}
@@ -129,19 +129,31 @@ const ServiceCategories = () => {
 
   if (error) {
     return (
-      <section className="bg-muted py-12 lg:py-16">
+      <section className="bg-gradient-to-b from-white to-muted py-12 lg:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <Icon name="AlertCircle" size={48} className="text-error mx-auto mb-4" />
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-center max-w-md mx-auto bg-white rounded-2xl shadow-lg p-8 border border-gray-100"
+          >
+            <motion.div 
+              animate={{ rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <Icon name="AlertCircle" size={56} className="text-error mx-auto mb-4" />
+            </motion.div>
             <h2 className="text-2xl font-bold text-foreground mb-2">Unable to Load Services</h2>
-            <p className="text-muted-foreground mb-4">{error}</p>
-            <button
+            <p className="text-muted-foreground mb-6">{error}</p>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
+              className="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl shadow-md hover:shadow-lg transition-all"
             >
               Try Again
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
         </div>
       </section>
     );
@@ -149,67 +161,101 @@ const ServiceCategories = () => {
 
 
   return (
-    <section className="bg-muted py-12 lg:py-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl lg:text-4xl font-headline font-bold text-foreground mb-4">
+    <section className="bg-gradient-to-b from-white via-white to-muted py-16 lg:py-28">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        {/* Background decorative elements */}
+        <div className="absolute -top-12 left-1/4 w-64 h-64 bg-gradient-to-br from-secondary/5 to-accent/10 rounded-full blur-3xl opacity-70" />
+        <div className="absolute bottom-12 right-1/4 w-80 h-80 bg-gradient-to-tr from-primary/5 to-secondary/10 rounded-full blur-3xl opacity-60" />
+
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-16"
+        >
+          <h2 className="inline-block text-4xl lg:text-5xl font-headline font-extrabold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-primary via-secondary to-accent">
             Comprehensive Digital Services
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             Everything you need for your mobile and digital requirements under one roof
           </p>
-        </div>
+        </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-          {categoryCards.map((category) => (
-            <div
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {categoryCards.map((category, index) => (
+            <ScrollReveal 
               key={category.id}
-              className="bg-card rounded-xl overflow-hidden shadow-soft hover:shadow-strong transition-smooth group"
+              animation="slideUp"
+              delay={index * 0.1}
             >
-              <div className="relative h-48 overflow-hidden">
-                <Image
-                  src={category.image}
-                  alt={category.imageAlt}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-smooth duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/50 to-transparent"></div>
-                <div className={`absolute top-4 left-4 w-12 h-12 ${category.bgColor} rounded-lg flex items-center justify-center`}>
-                  <Icon name={category.icon} size={24} color={category.color} />
-                </div>
-              </div>
-
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-xl font-semibold text-foreground flex items-center gap-2">
-                    {category.name}
-                  </h3>
-                </div>
-
-                <p className="text-sm text-muted-foreground mb-4">
-                  {category.description}
-                </p>
-
-                <div className="grid grid-cols-2 gap-2 mb-6">
-                  {category.features.map((feature, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground"
+              <Interactive>
+                <div className="h-full rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 relative group hover:-translate-y-1">
+                  {/* Gradient border on hover */}
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-secondary via-accent to-primary opacity-0 group-hover:opacity-100 transition-all duration-500 -z-10 blur-sm" />
+                  
+                  {/* Image container */}
+                  <div className="relative h-56 overflow-hidden">
+                    <Image
+                      src={category.image}
+                      alt={category.imageAlt}
+                      className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent"></div>
+                    
+                    {/* Category icon */}
+                    <motion.div 
+                      whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
+                      transition={{ duration: 0.5 }}
+                      className="absolute top-4 left-4"
                     >
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
-                      <span className="line-clamp-1">{feature}</span>
+                      <div className="w-14 h-14 bg-gradient-to-br from-secondary to-accent rounded-xl flex items-center justify-center shadow-lg">
+                        <Icon name={category.icon} size={28} color="white" />
+                      </div>
+                    </motion.div>
+                    
+                    {/* Category name - on image overlay */}
+                    <div className="absolute bottom-0 left-0 right-0 p-6">
+                      <h3 className="text-xl sm:text-2xl font-headline font-bold text-white mb-2">
+                        {category.name}
+                      </h3>
                     </div>
-                  ))}
-                </div>
+                  </div>
 
-                <Link
-                  to={category.link}
-                  className="inline-flex items-center justify-between w-full px-4 py-3 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-smooth"
-                >
-                  View all services
-                  <Icon name="ArrowRight" size={16} className="ml-2" />
-                </Link>
-              </div>
-            </div>
+                  <div className="p-6">
+                    {/* Category description */}
+                    <p className="text-muted-foreground mb-5">
+                      {category.description}
+                    </p>
+
+                    {/* Features grid */}
+                    <div className="grid grid-cols-2 gap-3 mb-8">
+                      {category.features.map((feature, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center gap-2 group/feature"
+                        >
+                          <span className="w-2 h-2 rounded-full bg-secondary group-hover/feature:scale-125 transition-all duration-300"></span>
+                          <span className="text-sm text-foreground line-clamp-1">{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* CTA Button */}
+                    <Link
+                      to={category.link}
+                      className="relative inline-flex w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-r from-secondary to-accent p-[1px] focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2"
+                    >
+                      <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#a855f7_0%,#0ea5e9_50%,#a855f7_100%)] opacity-40" />
+                      <span className="inline-flex h-full w-full cursor-pointer items-center justify-between rounded-xl bg-white px-6 py-3.5 text-sm font-medium text-foreground backdrop-blur-3xl hover:bg-white/90 transition-all duration-300">
+                        <span>View all services</span>
+                        <Icon name="ArrowRight" size={16} className="ml-2 text-secondary" />
+                      </span>
+                    </Link>
+                  </div>
+                </div>
+              </Interactive>
+            </ScrollReveal>
           ))}
         </div>
       </div>
