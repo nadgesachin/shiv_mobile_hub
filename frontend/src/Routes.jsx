@@ -9,6 +9,7 @@ import ServicesHub from './pages/services-hub';
 import ProductsCatalog from './pages/products-catalog';
 import Homepage from './pages/homepage';
 import MobileHomepageContainer from './pages/homepage/MobileHomepageContainer';
+import PremiumMobileContainer from './pages/homepage/PremiumMobileContainer';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
@@ -22,6 +23,7 @@ import AdminGuard from './pages/admin/AdminGuard';
 import UsersManagement from './pages/admin/UsersManagement';
 import CategoriesManagement from './pages/admin/CategoriesManagement';
 import SectionsManagement from './pages/admin/SectionsManagement';
+import BannersManagement from './pages/admin/BannersManagement';
 import PagesManagement from './pages/admin/PagesManagement';
 import Settings from './pages/admin/Settings';
 import ChatPage from './pages/chat/ChatPage';
@@ -54,6 +56,7 @@ const Routes = () => {
           <Route path="analytics" element={<div>Analytics Dashboard</div>} />
           <Route path="pages" element={<PagesManagement />} />
           <Route path="sections" element={<SectionsManagement />} />
+          <Route path="banners" element={<BannersManagement />} />
           <Route path="settings" element={<Settings />} />
         </Route>
         
@@ -70,19 +73,20 @@ const Routes = () => {
         } />
         
         {/* Public Routes */}
-        <Route path="/" element={<MobileHomepageContainer />} />
+        <Route path="/" element={<Homepage />} />
+        <Route path="/premium" element={<PremiumMobileContainer />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/csc-portal" element={<CSCPortal />} />
         <Route path="/services-hub" element={<ServicesHub />} />
         <Route path="/products-catalog" element={<ProductsCatalog />} />
-        <Route path="/homepage" element={<MobileHomepageContainer />} />
+        <Route path="/homepage" element={<Homepage />} />
         
         {/* Fallback Route */}
         <Route path="*" element={<NotFound />} />
       </RouterRoutes>
       
       {/* Floating Chat Widget */}
-      <ChatWidget />
+      {/* <ChatWidget /> */}
       
       </NotificationProvider>
       </ChatProvider>

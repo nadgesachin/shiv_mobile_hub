@@ -1,10 +1,47 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+@import './premium.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+:root {
+  /* Premium colors from reference design */
+  --color-orange-500: #FB923C;
+  --color-orange-600: #F97316;
+  --color-orange-700: #EA580C;
+  --color-orange-800: #C2410C;
+  --color-purple-500: #C084FC;
+  --color-purple-600: #A855F7;
+  --color-purple-700: #9333EA;
+  --color-yellow-300: #FDE68A;
+  --color-yellow-400: #FCD34D;
+  
+  /* Update existing color variables to match the premium design */
+  --color-primary: #FB923C;
+  --color-primary-light: #FDBA74;
+  --color-primary-dark: #EA580C;
+  --color-primary-foreground: #ffffff;
+
+  --color-secondary: #9333EA;
+  --color-secondary-light: #C084FC;
+  --color-secondary-dark: #7E22CE;
+  --color-secondary-foreground: #ffffff;
+
+  --color-accent: #FCD34D;
+  --color-accent-light: #FDE68A;
+  --color-accent-dark: #F59E0B;
+  --color-accent-foreground: #1F2937;
+  
+  /* Update gradients */
+  --gradient-primary: linear-gradient(to right, #FB923C, #C084FC);
+  --gradient-secondary: linear-gradient(to right, #9333EA, #F59E0B);
+  --gradient-accent: linear-gradient(to right, #FDE68A, #FB923C);
+  --gradient-cta: linear-gradient(to right, #FB923C, #9333EA, #FDE68A);
+}
 
 @layer base {
   :root {
@@ -321,4 +358,15 @@
   .smooth-scroll {
     scroll-behavior: smooth;
   }
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
 }

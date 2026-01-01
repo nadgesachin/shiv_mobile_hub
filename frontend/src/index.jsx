@@ -4,8 +4,13 @@ import App from "./App";
 import "./styles/tailwind.css";
 import "./styles/index.css";
 import "./styles/mobile.css";
+import "./styles/premium.css";
 
 const container = document.getElementById("root");
 const root = createRoot(container);
 
-root.render(<App />);
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);

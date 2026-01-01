@@ -106,14 +106,18 @@ const ProductsManagement = () => {
 
   // Handle product update
   const handleUpdateProduct = async (id, productData) => {
+    console.log('Attempting to update product with ID:', id);
+    console.log('Data being sent:', productData);
     try {
       await apiService.updateProduct(id, productData);
+      console.log('Product update API call successful.');
       await fetchProducts();
       setIsFormOpen(false);
       setSelectedProduct(null);
       setIsEditing(false);
       setError('');
     } catch (err) {
+      console.error('Failed to update product:', err);
       setError(err.message || 'Failed to update product');
     }
   };
