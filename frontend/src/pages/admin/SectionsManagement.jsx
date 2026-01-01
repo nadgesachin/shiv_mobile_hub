@@ -13,20 +13,6 @@ const SectionsManagement = () => {
   const [selectedSection, setSelectedSection] = useState(null);
   const [iconDropdownOpen, setIconDropdownOpen] = useState(false);
   const [iconSearch, setIconSearch] = useState('');
-
-  // Style options for the section display
-  const styleOptions = [
-    { value: 'DailyDeals', label: 'Daily Deals' },
-    { value: 'TrendingProducts', label: 'Trending Products' },
-    { value: 'BestsellingProducts', label: 'Bestselling Products' },
-    { value: 'LowPriceProducts', label: 'Low Price Products' },
-    { value: 'LiveShopBanner', label: 'Live Shop Banner' },
-    { value: 'TopOffers', label: 'Top Offers' },
-    { value: 'BrandDhamaka', label: 'Brand Dhamaka' },
-    { value: 'ForYouProductSection', label: 'For You' },
-    { value: 'CategoryGrid', label: 'Category Grid' }
-  ];
-
   const [formData, setFormData] = useState({
     name: '',
     icon: '',
@@ -36,7 +22,6 @@ const SectionsManagement = () => {
     maxProducts: 10,
     isActive: true,
     displayOrder: 0,
-    style: 'DailyDeals', // Default style
     settings: {
       showBadge: true,
       showRating: true,
@@ -222,7 +207,6 @@ const SectionsManagement = () => {
       maxProducts: section.maxProducts,
       isActive: section.isActive,
       displayOrder: section.displayOrder,
-      style: section.style || 'DailyDeals',
       settings: {
         showBadge: section.settings?.showBadge ?? true,
         showRating: section.settings?.showRating ?? true,
@@ -254,7 +238,6 @@ const SectionsManagement = () => {
       maxProducts: 10,
       isActive: true,
       displayOrder: 0,
-      style: 'DailyDeals',
       settings: {
         showBadge: true,
         showRating: true,
@@ -502,22 +485,6 @@ const SectionsManagement = () => {
                       value={formData.subtitle}
                       onChange={handleInputChange}
                     />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium">Style</label>
-                    <select
-                      name="style"
-                      value={formData.style}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                    >
-                      {styleOptions.map(option => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
                   </div>
 
                   <div className="space-y-2">

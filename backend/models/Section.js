@@ -17,21 +17,6 @@ const sectionSchema = new mongoose.Schema({
   subtitle: {
     type: String
   },
-  style: {
-    type: String,
-    enum: [
-      'DailyDeals',
-      'TrendingProducts',
-      'BestsellingProducts',
-      'LowPriceProducts',
-      'LiveShopBanner',
-      'TopOffers',
-      'BrandDhamaka',
-      'ForYouProductSection',
-      'CategoryGrid'
-    ],
-    default: 'DailyDeals'
-  },
   description: {
     type: String
   },

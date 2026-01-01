@@ -12,7 +12,6 @@ const AdminLayout = () => {
     { path: '/admin/products', label: 'Products', icon: 'Package' },
     { path: '/admin/categories', label: 'Categories', icon: 'Folder' },
     { path: '/admin/sections', label: 'Sections', icon: 'Grid3x3' },
-    { path: '/admin/banners', label: 'Banners', icon: 'Image' },
     { path: '/admin/services', label: 'Services', icon: 'Wrench' },
     { path: '/admin/users', label: 'Users', icon: 'Users' },
     { path: '/admin/pages', label: 'Pages', icon: 'FileText' },
