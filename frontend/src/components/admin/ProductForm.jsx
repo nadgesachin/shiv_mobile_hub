@@ -96,6 +96,11 @@ const ProductForm = ({ product, isEditing, onSubmit, onClose }) => {
     const fetchSections = async () => {
       try {
         const response = await apiService.getSections();
+        const sectionIds = response.data.sections.map(s => s._id);
+        const uniqueIds = new Set(sectionIds);
+        if (sectionIds.length !== uniqueIds.size) {
+          console.warn('Duplicate section IDs found:', sectionIds.filter((id, index) => sectionIds.indexOf(id) !== index));
+        }
         setSections(response.data.sections);
       } catch (error) {
         console.error('Failed to fetch sections:', error);
@@ -254,6 +259,7 @@ const ProductForm = ({ product, isEditing, onSubmit, onClose }) => {
     if (!formData.brand.trim()) newErrors.brand = 'Brand is required';
     if (formData.images.length === 0) newErrors.images = 'At least one image is required';
 
+    console.log('Validation errors:', newErrors);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -261,8 +267,14 @@ const ProductForm = ({ product, isEditing, onSubmit, onClose }) => {
   // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
+    console.log('Form submitted, isEditing:', isEditing);
+    console.log('Form data:', formData);
 
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      console.log('Form validation failed');
+      return;
+    }
+    console.log('Form validation passed');
 
     const submitData = {
       ...formData,
@@ -273,7 +285,10 @@ const ProductForm = ({ product, isEditing, onSubmit, onClose }) => {
       stockCount: formData.stockCount ? Number(formData.stockCount) : 0
     };
 
+    console.log('Submit data:', submitData);
+
     if (isEditing) {
+      console.log('Calling onSubmit with id:', product._id);
       onSubmit(product._id, submitData);
     } else {
       onSubmit(submitData);

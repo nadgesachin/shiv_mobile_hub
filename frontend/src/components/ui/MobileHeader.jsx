@@ -99,9 +99,9 @@ const MobileHeader = () => {
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.2 }}
             >
-              <span className="text-xs font-medium">
-                <span className="text-secondary">SALE:</span> Get 10% off on all mobile accessories!
-              </span>
+                {/* <span className="text-xs font-medium">
+                  <span className="text-secondary">SALE:</span> Get 10% off on all mobile accessories!
+                </span> */}
             </motion.div>
           )}
         </AnimatePresence>

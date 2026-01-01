@@ -22,6 +22,7 @@ const messageRoutes = require('./routes/messages');
 const notificationRoutes = require('./routes/notifications');
 const categoryRoutes = require('./routes/categories');
 const pageRoutes = require('./routes/pages');
+const bannerRoutes = require('./routes/banners');
 const { auth, adminOnly } = require('./middleware/auth');
 
 // All admin routes require login + admin role
@@ -40,7 +41,7 @@ const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100 // limit each IP to 100 requests per windowMs
 });
-app.use('/upload', express.static(path.join(__dirname, 'upload')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/', limiter);
 
 // CORS configuration
@@ -77,6 +78,7 @@ app.use('/api/notifications', auth, notificationRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/pages', pageRoutes);
 app.use('/api/seed', seedRoutes);
+app.use('/api/banners', bannerRoutes);
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ 

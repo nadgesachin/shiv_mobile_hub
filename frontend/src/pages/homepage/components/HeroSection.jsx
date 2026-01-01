@@ -61,12 +61,12 @@ const HeroSection = () => {
   ];
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-white via-white to-muted py-12 lg:py-24">
+    <section className="relative overflow-hidden bg-gradient-to-br from-orange-50 via-purple-50 to-yellow-50 py-12 lg:py-24">
       {/* Background blobs/gradients */}
       {blobs.map((blob, i) => (
         <motion.div
           key={i}
-          className={`absolute rounded-full bg-gradient-to-br ${blob.color} opacity-60 blur-3xl`}
+          className={`absolute rounded-full bg-gradient-orange-purple-yellow opacity-60 blur-3xl`}
           style={{ 
             width: blob.size, 
             height: blob.size,
@@ -105,9 +105,9 @@ const HeroSection = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.5 }}
-                className="inline-flex items-center space-x-2 px-4 py-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm border border-gray-100"
+                className="badge-premium inline-flex items-center space-x-2 px-4 py-2 backdrop-blur-sm rounded-full"
               >
-                <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
                 <span className="text-sm font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                   {heroSlides[currentSlide].badge}
                 </span>
@@ -178,7 +178,7 @@ const HeroSection = () => {
                     iconName="ArrowRight" 
                     iconPosition="right" 
                     fullWidth
-                    className="rounded-xl bg-gradient-cta hover:shadow-colored text-white transition-all duration-300 px-8 py-3 text-base"
+                    className="button-premium rounded-xl transition-all duration-300 px-8 py-3 text-base"
                   >
                     {heroSlides[currentSlide].cta.text}
                   </Button>
