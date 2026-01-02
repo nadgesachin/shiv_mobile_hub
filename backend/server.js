@@ -23,6 +23,7 @@ const notificationRoutes = require('./routes/notifications');
 const categoryRoutes = require('./routes/categories');
 const pageRoutes = require('./routes/pages');
 const bannerRoutes = require('./routes/banners');
+const reviewRoutes = require('./routes/reviews');
 const { auth, adminOnly } = require('./middleware/auth');
 
 // All admin routes require login + admin role
@@ -79,6 +80,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/pages', pageRoutes);
 app.use('/api/seed', seedRoutes);
 app.use('/api/banners', bannerRoutes);
+app.use('/api/reviews', reviewRoutes);
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ 
