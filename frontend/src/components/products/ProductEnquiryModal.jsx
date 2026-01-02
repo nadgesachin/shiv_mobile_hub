@@ -6,6 +6,7 @@ import Toast from '../ui/Toast';
 import apiService from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { openChatWithLink } from '../../utils/ChatUtil';
+import LoginModal from '../auth/LoginModal';
 const ProductEnquiryModal = ({ product, onClose }) => {
   const { user, isAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
@@ -15,6 +16,7 @@ const ProductEnquiryModal = ({ product, onClose }) => {
     message: `I'm interested in ${product.name}. Please provide more information.`
   });
   const [loading, setLoading] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -25,6 +27,11 @@ const ProductEnquiryModal = ({ product, onClose }) => {
   };
 
   const handleChatInApp = () => {
+    if (!isAuthenticated()) {
+      setShowLoginModal(true);
+      return;
+    }
+
     openChatWithLink(
       {
         name: product.name,
@@ -44,6 +51,12 @@ const ProductEnquiryModal = ({ product, onClose }) => {
 
   const sendEnquiryMessage = async (e) => {
     e.preventDefault();
+    
+    if (!isAuthenticated()) {
+      setShowLoginModal(true);
+      return;
+    }
+    
     setLoading(true);
 
     try {
@@ -75,18 +88,29 @@ const ProductEnquiryModal = ({ product, onClose }) => {
   };
 
   const shareVia = (platform) => {
+    if (!isAuthenticated()) {
+      setShowLoginModal(true);
+      return;
+    }
+
     const url = encodeURIComponent(`${window.location.origin}/products/${product._id}`);
     const title = encodeURIComponent(`Check out ${product.name}`);
     const text = encodeURIComponent(`I found this amazing product: ${product.name}`);
+    const productInfo = encodeURIComponent(`
+      Product: ${product.name}
+      Price: ₹${product.price}
+      Description: ${product.description || 'No description available'}
+      Link: ${window.location.origin}/products/${product._id}
+    `);
 
     let shareUrl = '';
 
     switch (platform) {
       case 'whatsapp':
-        shareUrl = `https://api.whatsapp.com/send?phone=+917123456789&text=${title}%20-%20${url}`;
+        shareUrl = `https://api.whatsapp.com/send?phone=+917123456789&text=${productInfo}`;
         break;
       case 'facebook':
-        shareUrl = `https://m.me/shivmobilehub?text=${title}%20-%20${url}`;
+        shareUrl = `https://m.me/shivmobilehub?text=${productInfo}`;
         break;
       case 'instagram':
         // Usually opens Instagram profile, DM not directly supported via URL
@@ -94,7 +118,7 @@ const ProductEnquiryModal = ({ product, onClose }) => {
         Toast.info('Instagram opened. Please send us a DM with your enquiry');
         break;
       case 'email':
-        shareUrl = `mailto:info@shivmobilehub.com?subject=Enquiry about ${title}&body=${text}%0A%0AProduct: ${url}`;
+        shareUrl = `mailto:info@shivmobilehub.com?subject=Enquiry about ${title}&body=${productInfo}`;
         break;
       default:
         return;
@@ -103,9 +127,15 @@ const ProductEnquiryModal = ({ product, onClose }) => {
     window.open(shareUrl, '_blank');
   };
 
+  const handleLoginSuccess = () => {
+    setShowLoginModal(false);
+    // You can perform additional actions after successful login if needed
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-card border border-border rounded-lg shadow-lg w-full max-w-md overflow-hidden animate-fade-in-up">
+    <>
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="bg-card border border-border rounded-lg shadow-lg w-full max-w-md overflow-hidden animate-fade-in-up">
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h2 className="text-lg font-medium">Enquire About This Product</h2>
           <Button
@@ -260,6 +290,14 @@ const ProductEnquiryModal = ({ product, onClose }) => {
         </div>
       </div>
     </div>
+    
+    {showLoginModal && (
+      <LoginModal 
+        onClose={() => setShowLoginModal(false)} 
+        onLoginSuccess={handleLoginSuccess}
+      />
+    )}
+    </>
   );
 };
 

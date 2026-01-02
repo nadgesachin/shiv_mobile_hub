@@ -119,6 +119,24 @@ const Header = () => {
                   {item.label}
                 </Link>
               ))}
+              {!isAuthenticated() && (
+                <>
+                  <Button
+                    variant="outline"
+                    className="ml-4"
+                    onClick={() => navigate('/login')}
+                  >
+                    Login
+                  </Button>
+                  <Button
+                    variant="default"
+                    className="ml-2"
+                    onClick={() => navigate('/signup')}
+                  >
+                    Sign Up
+                  </Button>
+                </>
+              )}
             </nav>
 
             {/* Mobile Menu Button */}
@@ -177,6 +195,30 @@ const Header = () => {
                     {item.label}
                   </Link>
                 ))}
+                {!isAuthenticated() && (
+                  <>
+                    <Button
+                      variant="outline"
+                      className="w-full mt-2"
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        navigate('/login');
+                      }}
+                    >
+                      Login
+                    </Button>
+                    <Button
+                      variant="default"
+                      className="w-full mt-2"
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        navigate('/signup');
+                      }}
+                    >
+                      Sign Up
+                    </Button>
+                  </>
+                )}
               </div>
             </motion.div>
           </>
