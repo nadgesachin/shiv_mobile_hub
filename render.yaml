@@ -1,6 +1,7 @@
 services:
   - type: web
     name: shiv-mobile-hub-frontend
+    runtime: static
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: build
