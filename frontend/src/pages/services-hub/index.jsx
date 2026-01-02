@@ -467,18 +467,17 @@ const ServicesHub = () => {
     try {
       const query = { type: 'service' };
       const response = await apiService.getCategories(query);
-      console.log('API response for service categories:', response);
-
       if (response.data && response.data.length > 0) {
         const arr = [
-          { _id: 'all', name: 'All Categories', icon: 'Grid3x3' },
-          ...response.data,
+          { _id: 'all', name: 'All Services', slug: 'all', icon: 'Grid3x3' },
+          ...response.data.map(cat => ({ ...cat, slug: cat.slug || cat.name }))
         ];
         setCategories(arr);
         localStorage.setItem('categories-service', JSON.stringify(arr));
       } else {
-        console.warn('No service categories found in response');
-        setCategories([{ _id: 'all', name: 'All Categories', icon: 'Grid3x3' }]);
+        const fallback = [{ _id: 'all', name: 'All Services', slug: 'all', icon: 'Grid3x3' }];
+        console.log('Setting fallback categories:', fallback);
+        setCategories(fallback);
       }
     } catch (err) {
       console.error('Failed to fetch categories:', err);
@@ -508,12 +507,13 @@ const ServicesHub = () => {
   };
 
   useEffect(() => {
-    fetchServices(activeCategory);
-  }, [activeCategory]);
-
-  useEffect(() => {
+    fetchServices(); // Fetch all services on initial load
     if (localStorage.getItem('categories-service')) {
-      const arr = JSON.parse(localStorage.getItem('categories-service'));
+      const stored = JSON.parse(localStorage.getItem('categories-service'));
+      const arr = [
+        { _id: 'all', name: 'All Services', slug: 'all', icon: 'Grid3x3' },
+        ...stored.filter(cat => cat._id !== 'all') // avoid duplicates
+      ];
       setCategories(arr);
     } else {
       fetchCategories();
@@ -522,14 +522,20 @@ const ServicesHub = () => {
 
   useEffect(() => {
     const tempFilteredServices = Array.isArray(services) ? services.filter(service => {
-      const matchesCategory = activeCategory === 'all' || service?.category === activeCategory;
-      const matchesSearch = service?.name?.toLowerCase()?.includes(searchQuery?.toLowerCase()) ||
+      if (activeCategory === 'all') return true;
+      const cat = service.category;
+      const catSlug = typeof cat === 'string' ? cat.toLowerCase() : (cat?.slug || cat?.name || '').toLowerCase();
+      const activeSlug = (activeCategory || '').toLowerCase();
+      const matchesCategory = catSlug === activeSlug;
+      const matchesSearch =
+        service?.name?.toLowerCase()?.includes(searchQuery?.toLowerCase()) ||
         service?.description?.toLowerCase()?.includes(searchQuery?.toLowerCase());
       return matchesCategory && matchesSearch;
     }) : [];
-    setFilteredServices(tempFilteredServices);
-  }, [services])
 
+    console.log('Services after filtering:', tempFilteredServices);
+    setFilteredServices(tempFilteredServices);
+  }, [services, activeCategory, searchQuery]);
   // const quickActions = [
   //   { id: 1, title: 'Mobile Recharge', subtitle: 'Instant top-up', icon: 'Smartphone', color: 'var(--color-primary)' },
   //   { id: 2, title: 'Bill Payment', subtitle: 'Pay utility bills', icon: 'Receipt', color: 'var(--color-secondary)' },
@@ -584,7 +590,6 @@ const ServicesHub = () => {
     }
   ];
 
-
   const handleBookNow = (service) => {
     const url = `${window.location.origin}/services-hub`; // or a more specific path if you have one
 
@@ -598,7 +603,6 @@ const ServicesHub = () => {
   };
 
   const handleBookingConfirm = (bookingData) => {
-    console.log('Booking confirmed:', bookingData);
     setShowBookingModal(false);
     setBookingSuccess(true);
     setTimeout(() => setBookingSuccess(false), 5000);
@@ -667,7 +671,7 @@ const ServicesHub = () => {
           {/* <QuickActions actions={quickActions} onActionClick={handleQuickAction} /> */}
         </div>
       </section>
-      <section className="py-12 lg:py-16">
+      <section className="">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* <TrustIndicators /> */}
         </div>
@@ -679,7 +683,7 @@ const ServicesHub = () => {
               <CategoryFilter
                 categories={categories}
                 activeCategory={activeCategory}
-                onCategoryChange={(id) => setActiveCategory(id)}
+                onCategoryChange={(slug) => setActiveCategory(slug)}
               />
             </aside>
 
@@ -698,25 +702,59 @@ const ServicesHub = () => {
                 <p className="text-sm text-muted-foreground">
                   Showing {filteredServices?.length} services
                 </p>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  iconName="SlidersHorizontal"
-                  iconPosition="left"
-                >
-                  Filters
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant={viewMode === 'grid' ? 'default' : 'outline'}
+                    size="sm"
+                    iconName="LayoutGrid"
+                    iconPosition="left"
+                    onClick={() => setViewMode('grid')}
+                  >
+                    Grid
+                  </Button>
+                  <Button
+                    variant={viewMode === 'list' ? 'default' : 'outline'}
+                    size="sm"
+                    iconName="List"
+                    iconPosition="left"
+                    onClick={() => setViewMode('list')}
+                  >
+                    List
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    iconName="SlidersHorizontal"
+                    iconPosition="left"
+                  >
+                    Filters
+                  </Button>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredServices?.map((service) => (
-                  <ServiceCard
-                    key={service?.id}
-                    service={service}
-                    onBookNow={handleBookNow}
-                  />
-                ))}
-              </div>
+              {viewMode === 'grid' ? (
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredServices?.map((service) => (
+                    <ServiceCard
+                      key={service?.id}
+                      service={service}
+                      viewMode="grid"
+                      onBookNow={handleBookNow}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {filteredServices?.map((service) => (
+                    <ServiceCard
+                      key={service?.id}
+                      service={service}
+                      viewMode="list"
+                      onBookNow={handleBookNow}
+                    />
+                  ))}
+                </div>
+              )}
 
               {filteredServices?.length === 0 && (
                 <div className="text-center py-12">

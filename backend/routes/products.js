@@ -9,8 +9,6 @@ require('../config/passport')(passport);
 // Middleware to protect admin routes
 const adminAuth = passport.authenticate('jwt', { session: false });
 
-// @route   GET /api/products
-// @desc    Get all products with filters and pagination
 router.get('/', async (req, res) => {
   try {
     const {
@@ -27,61 +25,154 @@ router.get('/', async (req, res) => {
       isActive = true
     } = req.query;
 
-    // Build query
-    const query = { isActive };
+    const skip = (Number(page) - 1) * Number(limit);
+    const sortDirection = sortOrder === 'desc' ? -1 : 1;
 
-    if (category) query.category = category;
-    if (brand) query.brand = brand;
-    if (section) query.sections = section;
+    /* -------------------- CONDITION BUILDING -------------------- */
+    let condition = {
+      isActive: isActive === 'true' || isActive === true
+    };
+
+    if (brand) condition.brand = brand;
+
+    if (section) {
+      condition.sections = { $in: Array.isArray(section) ? section : [section] };
+    }
+
+    if (category) {
+      condition.category = category; // slug OR ObjectId
+    }
+
     if (minPrice || maxPrice) {
-      query.price = {};
-      if (minPrice) query.price.$gte = parseFloat(minPrice);
-      if (maxPrice) query.price.$lte = parseFloat(maxPrice);
+      condition.price = {};
+      if (minPrice) condition.price.$gte = Number(minPrice);
+      if (maxPrice) condition.price.$lte = Number(maxPrice);
     }
+
     if (search) {
-      query.$text = { $search: search };
+      condition.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { brand: { $regex: search, $options: 'i' } }
+      ];
     }
 
-    // Build sort
-    const sort = {};
-    sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+    /* -------------------- SORT -------------------- */
+    const sortCriteria = { [sortBy]: sortDirection };
 
-    // Execute query with pagination
-    const products = await Product.find(query)
-      .sort(sort)
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
-      .populate('sections', 'name title');
+    /* -------------------- AGGREGATION -------------------- */
+    const aggregate = [
+      { $match: condition },
 
-    const total = await Product.countDocuments(query);
+      /* 🔥 CATEGORY LOOKUP */
+      {
+        $lookup: {
+          from: 'categories',
+          let: { categoryId: '$category' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $or: [
+                    { $eq: ['$_id', '$$categoryId'] },
+                    { $eq: ['$slug', '$$categoryId'] }
+                  ]
+                }
+              }
+            },
+            {
+              $project: {
+                name: 1,
+                slug: 1,
+                icon: 1,
+                image: 1
+              }
+            }
+          ],
+          as: 'categoryInfo'
+        }
+      },
 
-    res.json({
+      {
+        $addFields: {
+          categoryInfo: { $arrayElemAt: ['$categoryInfo', 0] }
+        }
+      },
+
+      /* 🔥 SECTION LOOKUP */
+      {
+        $lookup: {
+          from: 'sections',
+          localField: 'sections',
+          foreignField: '_id',
+          as: 'sections'
+        }
+      },
+
+      /* -------------------- SORT / PAGINATION -------------------- */
+      { $sort: sortCriteria },
+      { $skip: skip },
+      { $limit: Number(limit) },
+
+      /* -------------------- RESPONSE SHAPE -------------------- */
+      {
+        $project: {
+          name: 1,
+          price: 1,
+          originalPrice: 1,
+          brand: 1,
+          rating: 1,
+          stockStatus: 1,
+          stockCount: 1,
+          images: 1,
+          category: '$categoryInfo',
+          sections: {
+            _id: 1,
+            name: 1,
+            title: 1
+          },
+          createdAt: 1
+        }
+      }
+    ];
+
+    /* -------------------- EXECUTION -------------------- */
+    const [products, totalCount] = await Promise.all([
+      Product.aggregate(aggregate),
+      Product.countDocuments(condition)
+    ]);
+
+    return res.status(200).json({
       success: true,
+      message: 'PRODUCTS FETCHED',
       data: {
         products,
         pagination: {
-          current: parseInt(page),
-          pages: Math.ceil(total / limit),
-          total,
-          limit: parseInt(limit)
+          page: Number(page),
+          limit: Number(limit),
+          total: totalCount,
+          pages: Math.ceil(totalCount / limit)
         }
       }
     });
+
   } catch (error) {
     console.error('Get products error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: 'Server error'
+      message: 'SERVER ERROR',
+      error: error.message
     });
   }
 });
+
 
 // @route   GET /api/products/:id
 // @desc    Get single product by ID
 router.get('/:id', async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-    
+
     if (!product) {
       return res.status(404).json({
         success: false,
@@ -200,7 +291,7 @@ router.get('/meta/categories', async (req, res) => {
   try {
     const categories = await Product.distinct('category');
     const brands = await Product.distinct('brand');
-    
+
     res.json({
       success: true,
       data: {
@@ -230,7 +321,7 @@ router.put('/:id/toggle-status', adminAuth, async (req, res) => {
     }
 
     const product = await Product.findById(req.params.id);
-    
+
     if (!product) {
       return res.status(404).json({
         success: false,

@@ -91,7 +91,6 @@ const MobileShowcase = () => {
   const getSectionProducts = (sectionId) => {
     return products
       .filter(product =>
-        product.isActive &&
         product.sections &&
         product.sections.some(sectionObj => sectionObj._id.toString() === sectionId.toString())
       )
@@ -389,7 +388,7 @@ const MobileShowcase = () => {
         {/* Dynamic Sections with enhanced UI */}
         {sections.length > 0 && sections.map((section, sectionIdx) => {
           const sectionProducts = getSectionProducts(section._id);
-          if (sectionProducts.length === 0) return null; // Hide sections with no products
+          console.log('Section:', section.title || section.name, 'ID:', section._id, 'Products:', sectionProducts.length, 'Style:', section.style);
 
           return (
             <ProductSection key={section._id} section={section} products={sectionProducts} />

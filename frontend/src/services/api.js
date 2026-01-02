@@ -1,6 +1,8 @@
 import CacheService from './cacheService';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_ADSENSE_ID;
+console.log('API_BASE_URL:', API_BASE_URL);
+console.log(import.meta.env);
 
 class ApiService {
   constructor() {

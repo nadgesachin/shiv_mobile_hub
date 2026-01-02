@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: shiv-mobile-hub-frontend
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: build
+    envVars:
+      - key: VITE_ADSENSE_ID
+        value: http://localhost:5000/api

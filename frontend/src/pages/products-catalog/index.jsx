@@ -27,6 +27,7 @@ const ProductsCatalog = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [enquiryProduct, setEnquiryProduct] = useState(null);
+  const [categories, setCategories] = useState([]);
 
   const sortOptions = [
     { value: 'featured', label: 'Featured' },
@@ -45,6 +46,54 @@ const ProductsCatalog = () => {
     { id: 'wearables', name: 'Wearables', icon: 'Watch' },
     { id: 'accessories', name: 'Accessories', icon: 'Cable' }
   ];
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await apiService.getProductCategories();
+
+        const rawCategories = response?.data?.categories || [];
+
+        // 🔥 Filter only valid string categories (ignore ObjectId)
+        const validCategories = rawCategories.filter(
+          cat => typeof cat === 'string' && !cat.match(/^[a-f0-9]{24}$/i)
+        );
+
+        const formattedCategories = [
+          { id: 'all', label: 'All Products', value: 'all', icon: 'Grid' },
+          ...validCategories.map(cat => ({
+            id: cat,
+            value: cat,                 // 🔥 filter key
+            label: formatCategoryName(cat),
+            icon: getCategoryIcon(cat)
+          }))
+        ];
+
+        setCategories(formattedCategories);
+      } catch (err) {
+        console.error('Failed to fetch categories:', err);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  const formatCategoryName = (slug) => {
+    return slug
+      .replace(/-/g, ' ')
+      .replace(/\b\w/g, char => char.toUpperCase());
+  };
+
+  const getCategoryIcon = (category) => {
+    switch (category) {
+      case 'smartphones': return 'Smartphone';
+      case 'tablets': return 'Tablet';
+      case 'audio': return 'Headphones';
+      case 'wearables': return 'Watch';
+      case 'accessories': return 'Cable';
+      default: return 'Grid';
+    }
+  };
 
   const handleAddToCart = (product) => {
     setCartItems((prev) => [...prev, product]);
@@ -69,26 +118,27 @@ const ProductsCatalog = () => {
     setComparisonProducts((prev) => prev?.filter((p) => p?.id !== productId));
   };
 
-  // Search and filter functionality
   const handleSearch = () => {
     setIsSearching(true);
-
     let results = [...products];
-
-    // Category filter
     if (currentCategory !== 'all') {
-      results = results.filter(product => product.category === currentCategory);
+      results = results.filter(product => {
+        if (product.category?.slug) {
+          return product.category.slug === currentCategory;
+        }
+        return false;
+      });
     }
 
     // Text search
     if (searchQuery.trim() !== '') {
       const query = searchQuery.toLowerCase();
       results = results.filter(product =>
-        product.name.toLowerCase().includes(query) ||
-        product.description.toLowerCase().includes(query) ||
+        product.name?.toLowerCase().includes(query) ||
+        product.description?.toLowerCase().includes(query) ||
         product.brand?.toLowerCase().includes(query) ||
-        product.specs.some(spec => spec.toLowerCase().includes(query)) ||
-        product.category?.toLowerCase().includes(query)
+        product.specs?.some(spec => spec.toLowerCase().includes(query)) ||
+        product.category?.toLowerCase?.().includes(query)
       );
     }
 
@@ -108,21 +158,20 @@ const ProductsCatalog = () => {
     setIsSearching(false);
   };
 
-  // Use useEffect to trigger search when dependencies change
+  // The single, definitive useEffect for all filtering logic.
   useEffect(() => {
-    // Initial filter
-    handleSearch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentCategory, sortBy]);
-
-  // Trigger search when search query changes
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
+    // The initial fetch populates `products`, which triggers this effect.
+    // We debounce the search to prevent excessive re-renders during rapid state changes.
+    const handler = setTimeout(() => {
       handleSearch();
-    }, 300); // Debounce search by 300ms
+    }, 100); // A small debounce is sufficient here.
 
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery]);
+    return () => {
+      clearTimeout(handler);
+    };
+    // This effect re-runs ONLY when a filter or the master product list changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, currentCategory, sortBy]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -132,7 +181,9 @@ const ProductsCatalog = () => {
     const fetchProducts = async () => {
       try {
         const response = await apiService.getProducts({ limit: 200 }); // or whatever limit you want
-        setProducts(response.data.products || []);
+        const productData = response.data.products || [];
+        setProducts(productData);
+        setFilteredProducts(productData); // Initialize filtered products
         setError('');
       } catch (err) {
         console.error('Failed to fetch products:', err);
@@ -196,36 +247,40 @@ const ProductsCatalog = () => {
           {/* Mobile-friendly category selector */}
           <div className="py-2 overflow-x-auto hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
             <div className="flex gap-2 pb-2">
-              {categoryOptions.map((category) => (
+              {categories.map((category) => (
                 <button
                   key={category.id}
-                  onClick={() => setCurrentCategory(category.id)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-full whitespace-nowrap font-medium text-sm transition-all duration-200 touch-target ${currentCategory === category.id
-                    ? 'bg-primary text-primary-foreground shadow-soft'
-                    : 'bg-white border border-gray-200 text-foreground hover:border-primary hover:bg-gray-50'
+                  onClick={() => setCurrentCategory(category.value)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-full 
+          whitespace-nowrap font-medium text-sm transition-all
+          ${currentCategory === category.value
+                      ? 'bg-primary text-primary-foreground shadow-soft'
+                      : 'bg-white border border-gray-200 text-foreground hover:border-primary hover:bg-gray-50'
                     }`}
                 >
                   <Icon name={category.icon} size={16} />
-                  <span className="hidden sm:inline">{category.name}</span>
+                  <span className="hidden sm:inline">{category.label}</span>
                 </button>
               ))}
             </div>
           </div>
+
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+      <div className="max-w-7xl mx-auto px-2 sm:px-2 lg:px-6 py-6 lg:py-10">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-gray-100">
           <div>
             <p className="text-sm font-medium text-foreground">
-              <span className="font-semibold text-lg">{filteredProducts.length > 0 ? filteredProducts.length : products.length}</span>
+              <span className="font-semibold text-lg">{filteredProducts.length}</span>
               <span className="text-muted-foreground ml-2">products found</span>
             </p>
             {currentCategory !== 'all' && (
               <p className="text-xs text-primary mt-2 font-medium">
-                📁 {categoryOptions.find(c => c.id === currentCategory)?.name}
+                📁 {categories.find(c => c.value === currentCategory)?.label}
               </p>
             )}
+
           </div>
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
@@ -266,19 +321,21 @@ const ProductsCatalog = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-8">
+        <div className="gap-8">
           <div className="col-span-1">
             <div className={`grid gap-4 sm:gap-5 lg:gap-6 ${viewMode === 'grid' ? 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' : 'grid-cols-1'}`}
             >
-              {(filteredProducts.length > 0 ? filteredProducts : products).map((product) => (
+              {filteredProducts.map((product) => (
                 <div key={product?.id} className="relative group animate-fadeInUp">
                   <ProductCard
                     product={product}
+                    viewMode={viewMode}   // ✅ THIS IS THE FIX
                     onAddToCart={handleAddToCart}
                     onQuickView={handleQuickView}
                     onAddToWishlist={handleAddToWishlist}
-                    enquiryProduct = {enquiryProduct}
+                    enquiryProduct={enquiryProduct}
                   />
+
                   <button
                     onClick={() => handleAddToComparison(product)}
                     className="absolute top-4 left-4 w-10 h-10 bg-white shadow-soft rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:shadow-medium touch-target"
@@ -417,7 +474,7 @@ const ProductsCatalog = () => {
           products={comparisonProducts}
           onClose={() => setShowComparison(false)}
           onRemoveProduct={handleRemoveFromComparison}
-          onEnquire = {handleAddToCart} />
+          onEnquire={handleAddToCart} />
       }
       <Footer />
     </div>);
