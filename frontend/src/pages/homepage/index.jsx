@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Helmet } from 'react-helmet';
+import SEO from '../../components/SEO';
 import Header from '../../components/ui/Header';
 import Footer from '../../components/ui/Footer';
 import HeroSection from './components/HeroSection';
@@ -10,6 +10,8 @@ import TestimonialCarousel from './components/TestimonialCarousel';
 import LiveActivityFeed from './components/LiveActivityFeed';
 import CTASection from './components/CTASection';
 import MobileShowcase from './components/MobileShowcase';
+import RecentlyViewed from '../../components/products/RecentlyViewed';
+
 const Homepage = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -17,23 +19,11 @@ const Homepage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Shiv Mobile Hub - Your Digital Neighborhood Partner | Mobile Services & Government Solutions</title>
-        <meta
-          name="description"
-          content="Trusted mobile repair, recharge, bill payment, and CSC government services. Serving 10,000+ customers with expert care and digital convenience."
-        />
-        <meta
-          name="keywords"
-          content="mobile repair, mobile recharge, bill payment, CSC services, government services, Aadhaar, PAN card, mobile shop, digital services"
-        />
-        <meta property="og:title" content="Shiv Mobile Hub - Your Digital Neighborhood Partner" />
-        <meta
-          property="og:description"
-          content="Comprehensive mobile and digital services with trusted CSC government solutions"
-        />
-        <meta property="og:type" content="website" />
-      </Helmet>
+      <SEO 
+        title="Shiv Mobile Hub - Your Digital Neighborhood Partner"
+        description="Trusted mobile repair, recharge, bill payment, and CSC government services. Serving 10,000+ customers with expert care and digital convenience."
+        keywords="mobile repair, mobile recharge, bill payment, CSC services, government services, Aadhaar, PAN card, mobile shop, digital services"
+      />
 
       <div className="min-h-screen bg-background">
         <Header />
@@ -43,6 +33,12 @@ const Homepage = () => {
           <HeroSection />
           {/* <QuickServiceBar /> */}
           {/* <TrustIndicators /> */}
+          
+          {/* Recently Viewed Products */}
+          <div className="container mx-auto px-4 py-8">
+            <RecentlyViewed />
+          </div>
+          
           <ServiceCategories />
           <TestimonialCarousel />
           {/* <LiveActivityFeed /> */}

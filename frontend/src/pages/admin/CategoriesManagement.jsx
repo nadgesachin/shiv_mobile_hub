@@ -17,6 +17,9 @@ const CategoriesManagement = () => {
   const [iconDropdownOpen, setIconDropdownOpen] = useState(false);
   const [iconSearch, setIconSearch] = useState('');
   const [imagePreview, setImagePreview] = useState(null);
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   // Curated list of Lucide icon names you want to allow
   const ICON_OPTIONS = [
@@ -155,23 +158,38 @@ const CategoriesManagement = () => {
     setModalOpen(true);
   };
 
-  // Open modal to edit category
-  const handleEdit = (category) => {
-    setFormData({
-      name: category.name,
-      description: category.description || '',
-      parentId: category.parent || '',
-      type: category.type,
-      icon: category.icon,
-      image: category.image || '',
-      isActive: category.isActive,
-      order: category.order || 0,
-      metaTitle: category.metaTitle || '',
-      metaDescription: category.metaDescription || ''
-    });
-    setImagePreview(category.image ? category.image : null);
-    setEditingCategory(category);
-    setModalOpen(true);
+  // Open modal to edit category - fetch fresh data from API
+  const handleEdit = async (category) => {
+    try {
+      setLoading(true);
+      const response = await apiService.request(`/categories/${category._id}`);
+      
+      if (response.success && response.data) {
+        const fetchedCategory = response.data;
+        setFormData({
+          name: fetchedCategory.name,
+          description: fetchedCategory.description || '',
+          parentId: fetchedCategory.parent || '',
+          type: fetchedCategory.type,
+          icon: fetchedCategory.icon,
+          image: fetchedCategory.image || '',
+          isActive: fetchedCategory.isActive,
+          order: fetchedCategory.order || 0,
+          metaTitle: fetchedCategory.metaTitle || '',
+          metaDescription: fetchedCategory.metaDescription || ''
+        });
+        setImagePreview(fetchedCategory.image ? fetchedCategory.image : null);
+        setEditingCategory(fetchedCategory);
+        setModalOpen(true);
+      } else {
+        setError('Failed to fetch category details');
+      }
+    } catch (err) {
+      console.error('Error fetching category:', err);
+      setError(err.message || 'Failed to load category details');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Handle delete button click
@@ -179,6 +197,16 @@ const CategoriesManagement = () => {
     setCategoryToDelete(category);
     setTransferCategoryId('');
     setConfirmDeleteModalOpen(true);
+  };
+
+  // Generate slug from name
+  const generateSlug = (name) => {
+    return name
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '') // Remove special characters
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-'); // Replace multiple hyphens with single hyphen
   };
 
   // Handle form submission
@@ -194,6 +222,7 @@ const CategoriesManagement = () => {
 
       const payload = {
         name: formData.name,
+        slug: generateSlug(formData.name),
         description: formData.description,
         parentId: formData.parentId || null,
         type: formData.type,
@@ -262,6 +291,15 @@ const CategoriesManagement = () => {
     });
   };
 
+  // Filter and paginate categories
+  const filteredCategories = categories.filter(cat => 
+    typeFilter === 'all' || cat.type === typeFilter
+  );
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentCategories = filteredCategories.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredCategories.length / itemsPerPage);
+
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
@@ -271,6 +309,22 @@ const CategoriesManagement = () => {
           <Icon name="Plus" className="mr-2" size={16} />
           Add New Category
         </Button>
+      </div>
+
+      {/* Filter */}
+      <div className="mb-4 flex gap-4">
+        <div>
+          <label className="block text-sm font-medium mb-2">Filter by Type</label>
+          <select
+            value={typeFilter}
+            onChange={(e) => { setTypeFilter(e.target.value); setCurrentPage(1); }}
+            className="px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="all">All Types</option>
+            <option value="product">Product</option>
+            <option value="service">Service</option>
+          </select>
+        </div>
       </div>
 
       {/* Categories List */}
@@ -298,6 +352,7 @@ const CategoriesManagement = () => {
               <thead className="bg-muted/50">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Name</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Type</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Parent</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Description</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
@@ -306,7 +361,7 @@ const CategoriesManagement = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {categories.map((category) => (
+                {currentCategories.map((category) => (
                   <tr key={category._id} className="hover:bg-muted/50">
                     <td className="px-4 py-3">
                       <div className="flex items-center">
@@ -317,6 +372,15 @@ const CategoriesManagement = () => {
                           </span>
                         )}
                       </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        category.type === 'product' 
+                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' 
+                          : 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                      }`}>
+                        {category.type || 'product'}
+                      </span>
                     </td>
                     <td className="px-4 py-3">
                       {category.parent ? (
@@ -366,6 +430,38 @@ const CategoriesManagement = () => {
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-4">
+          <div className="text-sm text-muted-foreground">
+            Showing {filteredCategories.length > 0 ? indexOfFirstItem + 1 : 0} to{' '}
+            {Math.min(indexOfLastItem, filteredCategories.length)} of{' '}
+            {filteredCategories.length} categories
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(currentPage - 1)}
+            >
+              Previous
+            </Button>
+            <span className="px-3 py-1 text-sm">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage >= totalPages}
+              onClick={() => setCurrentPage(currentPage + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Category Form Modal */}
       {modalOpen && (

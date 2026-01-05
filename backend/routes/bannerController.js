@@ -1,31 +1,49 @@
 const Banner = require('../models/Banner');
-const multer = require('multer');
-const path = require('path');
 
-// Set up multer for file storage
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/banners/');
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({ storage: storage });
-
-exports.uploadImage = upload.single('image');
+// No multer needed here - frontend will upload to /api/upload first
+// Then send the Cloudinary URL in the request body
 
 exports.createBanner = async (req, res) => {
   try {
-    const { title, type } = req.body;
-    const imageUrl = `/uploads/banners/${req.file.filename}`;
+    const { title, type, imageUrl, videoUrl } = req.body;
 
-    const newBanner = new Banner({ title, type, imageUrl });
+    // Validate required fields
+    if (!title || !type) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Title and type are required' 
+      });
+    }
+
+    // At least one media URL is required
+    if (!imageUrl && !videoUrl) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Either imageUrl or videoUrl is required' 
+      });
+    }
+
+    const newBanner = new Banner({ 
+      title, 
+      type, 
+      imageUrl: imageUrl || null,
+      videoUrl: videoUrl || null 
+    });
+    
     await newBanner.save();
-    res.status(201).json(newBanner);
+    
+    res.status(201).json({
+      success: true,
+      message: 'Banner created successfully',
+      data: newBanner
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Error creating banner', error });
+    console.error('Error creating banner:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error creating banner', 
+      error: error.message 
+    });
   }
 };
 

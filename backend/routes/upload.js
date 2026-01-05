@@ -20,14 +20,20 @@ cloudinary.config({
 // Configure Cloudinary storage for Multer
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
-  params: {
-    folder: 'shiv-mobile-hub',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
-    public_id: (req, file) => {
-      const timestamp = Date.now();
-      const originalName = file.originalname.split('.')[0];
-      return `${originalName}_${timestamp}`;
-    }
+  params: async (req, file) => {
+    const isVideo = file.mimetype.startsWith('video/');
+    return {
+      folder: 'shiv-mobile-hub',
+      allowed_formats: isVideo 
+        ? ['mp4', 'mov', 'avi', 'webm'] 
+        : ['jpg', 'jpeg', 'png', 'webp'],
+      resource_type: isVideo ? 'video' : 'image',
+      public_id: (() => {
+        const timestamp = Date.now();
+        const originalName = file.originalname.split('.')[0];
+        return `${originalName}_${timestamp}`;
+      })()
+    };
   }
 });
 
@@ -35,21 +41,25 @@ const storage = new CloudinaryStorage({
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+    fileSize: 50 * 1024 * 1024, // 50MB limit for videos
   },
   fileFilter: (req, file, cb) => {
-    // Check file type
-    if (file.mimetype.startsWith('image/')) {
+    // Check file type - allow both images and videos
+    if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
       cb(null, true);
     } else {
-      cb(new Error('Only image files are allowed'), false);
+      cb(new Error('Only image and video files are allowed'), false);
     }
   }
 });
 
 // @route   POST /api/upload/single
-// @desc    Upload single image (Admin only)
-router.post('/single', adminAuth, upload.single('image'), async (req, res) => {
+// @desc    Upload single image or video (Admin only)
+// Accepts field name: 'image' or 'file'
+router.post('/single', adminAuth, (req, res, next) => {
+  const uploadMiddleware = upload.single('image') || upload.single('file');
+  uploadMiddleware(req, res, next);
+}, async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({
@@ -58,15 +68,18 @@ router.post('/single', adminAuth, upload.single('image'), async (req, res) => {
       });
     }
 
+    const isVideo = req.file.mimetype.startsWith('video/');
+
     res.json({
       success: true,
-      message: 'Image uploaded successfully',
+      message: `${isVideo ? 'Video' : 'Image'} uploaded successfully`,
       data: {
         url: req.file.path,
         publicId: req.file.filename,
         originalName: req.file.originalname,
         size: req.file.size,
-        format: req.file.format
+        format: req.file.format,
+        type: isVideo ? 'video' : 'image'
       }
     });
   } catch (error) {
@@ -204,7 +217,7 @@ router.use((error, req, res, next) => {
     }
   }
   
-  if (error.message === 'Only image files are allowed') {
+  if (error.message === 'Only image and video files are allowed') {
     return res.status(400).json({
       success: false,
       message: error.message

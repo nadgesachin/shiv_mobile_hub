@@ -1,9 +1,25 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Icon from '../AppIcon';
 import Button from '../ui/Button';
 
-const ChatInput = ({ onSendMessage, onTyping, disabled = false, placeholder = "Type your message..." }) => {
-  const [message, setMessage] = useState('');
+const ChatInput = ({ onSendMessage, onTyping, disabled = false, placeholder = "Type your message...", initialMessage = '' }) => {
+  const [message, setMessage] = useState(initialMessage);
+  
+  // Check for prefilled message from localStorage on mount
+  useEffect(() => {
+    const prefilledMessage = localStorage.getItem('chatPrefilledMessage');
+    if (prefilledMessage) {
+      setMessage(prefilledMessage);
+      localStorage.removeItem('chatPrefilledMessage'); // Clear after using
+    }
+  }, []);
+  
+  // Update message if initialMessage prop changes
+  useEffect(() => {
+    if (initialMessage) {
+      setMessage(initialMessage);
+    }
+  }, [initialMessage]);
   const [isUploading, setIsUploading] = useState(false);
   const [showEmojis, setShowEmojis] = useState(false);
   const fileInputRef = useRef(null);
@@ -86,11 +102,11 @@ const ChatInput = ({ onSendMessage, onTyping, disabled = false, placeholder = "T
   
   return (
     <form onSubmit={handleSubmit} className="relative">
-      <div className="flex items-center gap-2 bg-muted rounded-lg px-3 border border-border">
+      <div className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2 border border-border">
         <button
           type="button"
           onClick={handleFileClick}
-          className="text-muted-foreground hover:text-foreground transition-colors"
+          className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
           aria-label="Attach file"
           disabled={disabled}
         >
@@ -109,15 +125,15 @@ const ChatInput = ({ onSendMessage, onTyping, disabled = false, placeholder = "T
           value={message}
           onChange={handleChange}
           placeholder={placeholder}
-          className="flex-1 py-3 bg-transparent focus:outline-none min-w-0"
+          className="flex-1 py-1 bg-transparent focus:outline-none min-w-0"
           disabled={disabled}
         />
         
-        <div className="relative">
+        <div className="relative flex-shrink-0">
           <button
             type="button"
             onClick={() => setShowEmojis(!showEmojis)}
-            className="text-muted-foreground hover:text-foreground transition-colors mr-1"
+            className="text-muted-foreground hover:text-foreground transition-colors"
             aria-label="Emoji"
             disabled={disabled}
           >
@@ -139,21 +155,21 @@ const ChatInput = ({ onSendMessage, onTyping, disabled = false, placeholder = "T
             </div>
           )}
         </div>
+        
+        <Button
+          type="submit"
+          variant="primary"
+          className="w-9 h-9 rounded-full p-0 flex items-center justify-center flex-shrink-0"
+          disabled={(!message.trim() && !isUploading) || disabled}
+          aria-label="Send message"
+        >
+          {isUploading ? (
+            <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+          ) : (
+            <Icon name="Send" size={16} />
+          )}
+        </Button>
       </div>
-      
-      <Button
-        type="submit"
-        variant="primary"
-        className="absolute right-2 top-1/2 transform -translate-y-1/2 w-8 h-8 rounded-full p-0 flex items-center justify-center"
-        disabled={(!message.trim() && !isUploading) || disabled}
-        aria-label="Send message"
-      >
-        {isUploading ? (
-          <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-        ) : (
-          <Icon name="Send" size={16} />
-        )}
-      </Button>
     </form>
   );
 };

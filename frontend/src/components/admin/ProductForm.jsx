@@ -10,7 +10,7 @@ const ProductForm = ({ product, isEditing, onSubmit, onClose }) => {
     description: '',
     price: '',
     originalPrice: '',
-    category: 'smartphones',
+    category: '',
     subcategory: '',
     brand: '',
     badge: '',
@@ -71,7 +71,12 @@ const ProductForm = ({ product, isEditing, onSubmit, onClose }) => {
 
   useEffect(() => {
     if (localStorage.getItem('categories-product')) {
-      setCategories(JSON.parse(localStorage.getItem('categories-product')));
+      const cats = JSON.parse(localStorage.getItem('categories-product'));
+      setCategories(cats);
+      // Set first category as default if not editing
+      if (!isEditing && cats.length > 0 && !formData.category) {
+        setFormData(prev => ({ ...prev, category: cats[0]._id }));
+      }
     } else {
       fetchCategories();
     }
@@ -86,6 +91,10 @@ const ProductForm = ({ product, isEditing, onSubmit, onClose }) => {
       if (response.data) {
         setCategories(response.data);
         localStorage.setItem('categories-product', JSON.stringify(response.data));
+        // Set first category as default if not editing
+        if (!isEditing && response.data.length > 0 && !formData.category) {
+          setFormData(prev => ({ ...prev, category: response.data[0]._id }));
+        }
       }
     } catch (err) {
       setErrors(err.message || 'Failed to fetch categories');
@@ -118,7 +127,7 @@ const ProductForm = ({ product, isEditing, onSubmit, onClose }) => {
         description: product.description || '',
         price: product.price || '',
         originalPrice: product.originalPrice || '',
-        category: product.category || '',
+        category: typeof product.category === 'object' ? product.category?._id || '' : product.category || '',
         subcategory: product.subcategory || '',
         brand: product.brand || '',
         badge: product.badge || '',

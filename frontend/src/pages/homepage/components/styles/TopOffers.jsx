@@ -5,10 +5,37 @@ import Icon from '../../../../components/AppIcon';
 import Image from '../../../../components/AppImage';
 import MobileSwipe from '../../../../components/ui/animations/MobileSwipe';
 import useViewport from '../../../../hooks/useViewport';
+import ProductEnquiryModal from '../../../../components/products/ProductEnquiryModal';
+import ProductPreviewModal from '../../../../components/admin/ProductPreviewModal';
+import apiService from '../../../../services/api';
+import Toast from '../../../../components/ui/Toast';
 
 const TopOffers = ({ section, products }) => {
   const viewport = useViewport();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [showEnquiryModal, setShowEnquiryModal] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewProduct, setPreviewProduct] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleProductClick = async (productId) => {
+    try {
+      setLoading(true);
+      const response = await apiService.request(`/products/${productId}`);
+      if (response.success && response.data) {
+        setPreviewProduct(response.data.product || response.data);
+        setShowPreviewModal(true);
+      } else {
+        Toast.error('Failed to load product details');
+      }
+    } catch (err) {
+      console.error('Error fetching product:', err);
+      Toast.error('Failed to load product details');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const formatPrice = (price) => {
     return `₹${price.toLocaleString('en-IN')}`;
@@ -38,19 +65,17 @@ const TopOffers = ({ section, products }) => {
           {products.map((product, index) => (
             <motion.div
               key={product.id}
-              className="w-56 flex-shrink-0 bg-white rounded-xl shadow-sm p-3 relative 
+              className="w-[280px] sm:w-[320px] flex-shrink-0 bg-white rounded-xl shadow-sm p-4 relative 
                hover:shadow-lg transition-all duration-300 
                border border-gray-100 group flex flex-col"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <Link to={`/products-catalog/${product.id}`} className="block flex-1">
-
+              <div className="cursor-pointer" onClick={() => handleProductClick(product._id || product.id)}>
                 {/* DISCOUNT BADGE */}
                 {product.originalPrice > product.price && (
-                  <div className="absolute top-2 left-2 bg-red-600 text-white 
-                        text-[10px] px-2 py-0.5 rounded-full font-semibold">
+                  <div className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
                     {calculateDiscount(product.originalPrice, product.price)}% OFF
                   </div>
                 )}
@@ -63,7 +88,7 @@ const TopOffers = ({ section, products }) => {
                 </div>
 
                 {/* IMAGE */}
-                <div className="h-32 flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden">
+                <div className="relative aspect-square bg-gray-50 rounded-lg overflow-hidden mb-3">
                   <Image
                     src={product.image}
                     alt={product.title}
@@ -93,7 +118,7 @@ const TopOffers = ({ section, products }) => {
                 </p>
 
                 {/* PRICE */}
-                <div className="mt-1 flex items-center gap-2">
+                <div className="mt-2 flex items-center gap-2">
                   <span className="text-green-600 font-bold text-sm">
                     {formatPrice(product.price)}
                   </span>
@@ -103,19 +128,25 @@ const TopOffers = ({ section, products }) => {
                     </span>
                   )}
                 </div>
-
-              </Link>
+              </div>
 
               {/* CONTACT TO BUY */}
               <button
-                className="mt-3 w-full text-xs font-semibold text-white 
-                 bg-gradient-to-r from-primary to-secondary
-                 py-2 rounded-lg hover:opacity-90 
-                 active:scale-95 transition-all"
+                className="w-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white 
+                  py-2 rounded-lg font-medium shadow-md hover:shadow-lg transition-all"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  // open contact modal / whatsapp / call
+                  const productData = {
+                    _id: product._id || product.id,
+                    name: product.title || product.name,
+                    price: product.price,
+                    originalPrice: product.originalPrice,
+                    description: product.description,
+                    images: product.images || []
+                  };
+                  setSelectedProduct(productData);
+                  setShowEnquiryModal(true);
                 }}
               >
                 Contact to Buy
@@ -125,6 +156,37 @@ const TopOffers = ({ section, products }) => {
 
         </div>
       </MobileSwipe>
+
+      {/* Preview Modal */}
+      {showPreviewModal && previewProduct && (
+        <ProductPreviewModal
+          product={previewProduct}
+          onClose={() => {
+            setShowPreviewModal(false);
+            setPreviewProduct(null);
+          }}
+        />
+      )}
+
+      {/* Enquiry Modal */}
+      {showEnquiryModal && selectedProduct && (
+        <ProductEnquiryModal
+          product={selectedProduct}
+          onClose={() => {
+            setShowEnquiryModal(false);
+            setSelectedProduct(null);
+          }}
+        />
+      )}
+
+      {loading && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="text-gray-600 mt-4">Loading...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

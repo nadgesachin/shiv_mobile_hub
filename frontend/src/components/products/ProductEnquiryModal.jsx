@@ -6,8 +6,10 @@ import Toast from '../ui/Toast';
 import apiService from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { openChatWithLink } from '../../utils/ChatUtil';
+import LoginModal from '../auth/LoginModal';
 const ProductEnquiryModal = ({ product, onClose }) => {
   const { user, isAuthenticated } = useAuth();
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -15,6 +17,16 @@ const ProductEnquiryModal = ({ product, onClose }) => {
     message: `I'm interested in ${product.name}. Please provide more information.`
   });
   const [loading, setLoading] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
+  // Get image URL from image object or string
+  const getImageUrl = (img) => {
+    if (!img) return '/placeholder.png';
+    return typeof img === 'string' ? img : (img.url || '/placeholder.png');
+  };
+
+  const productImages = product.images || [];
+  const currentImage = productImages[selectedImageIndex] || productImages[0];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -25,10 +37,15 @@ const ProductEnquiryModal = ({ product, onClose }) => {
   };
 
   const handleChatInApp = () => {
+    if (!isAuthenticated()) {
+      setShowLoginModal(true);
+      return;
+    }
+
     openChatWithLink(
       {
         name: product.name,
-        url: `${window.location.origin}/products/${product._id}`,
+        url: `${window.location.origin}/products-catalog/${product._id}`,
       },
       'cart' // or 'book', use whatever action label you prefer
     );
@@ -36,7 +53,7 @@ const ProductEnquiryModal = ({ product, onClose }) => {
   };
 
   const copyProductLink = () => {
-    const url = `${window.location.origin}/products/${product._id}`;
+    const url = `${window.location.origin}/products-catalog/${product._id}`;
     navigator.clipboard.writeText(url)
       .then(() => Toast.success('Product link copied to clipboard'))
       .catch(() => Toast.error('Failed to copy link'));
@@ -44,6 +61,12 @@ const ProductEnquiryModal = ({ product, onClose }) => {
 
   const sendEnquiryMessage = async (e) => {
     e.preventDefault();
+    
+    if (!isAuthenticated()) {
+      setShowLoginModal(true);
+      return;
+    }
+    
     setLoading(true);
 
     try {
@@ -75,18 +98,29 @@ const ProductEnquiryModal = ({ product, onClose }) => {
   };
 
   const shareVia = (platform) => {
-    const url = encodeURIComponent(`${window.location.origin}/products/${product._id}`);
+    if (!isAuthenticated()) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    const url = encodeURIComponent(`${window.location.origin}/products-catalog/${product._id}`);
     const title = encodeURIComponent(`Check out ${product.name}`);
     const text = encodeURIComponent(`I found this amazing product: ${product.name}`);
+    const productInfo = encodeURIComponent(`
+      Product: ${product.name}
+      Price: ₹${product.price}
+      Description: ${product.description || 'No description available'}
+      Link: ${window.location.origin}/products-catalog/${product._id}
+    `);
 
     let shareUrl = '';
 
     switch (platform) {
       case 'whatsapp':
-        shareUrl = `https://api.whatsapp.com/send?phone=+917123456789&text=${title}%20-%20${url}`;
+        shareUrl = `https://api.whatsapp.com/send?phone=+917123456789&text=${productInfo}`;
         break;
       case 'facebook':
-        shareUrl = `https://m.me/shivmobilehub?text=${title}%20-%20${url}`;
+        shareUrl = `https://m.me/shivmobilehub?text=${productInfo}`;
         break;
       case 'instagram':
         // Usually opens Instagram profile, DM not directly supported via URL
@@ -94,7 +128,7 @@ const ProductEnquiryModal = ({ product, onClose }) => {
         Toast.info('Instagram opened. Please send us a DM with your enquiry');
         break;
       case 'email':
-        shareUrl = `mailto:info@shivmobilehub.com?subject=Enquiry about ${title}&body=${text}%0A%0AProduct: ${url}`;
+        shareUrl = `mailto:info@shivmobilehub.com?subject=Enquiry about ${title}&body=${productInfo}`;
         break;
       default:
         return;
@@ -103,9 +137,15 @@ const ProductEnquiryModal = ({ product, onClose }) => {
     window.open(shareUrl, '_blank');
   };
 
+  const handleLoginSuccess = () => {
+    setShowLoginModal(false);
+    // You can perform additional actions after successful login if needed
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-card border border-border rounded-lg shadow-lg w-full max-w-md overflow-hidden animate-fade-in-up">
+    <>
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="bg-card border border-border rounded-lg shadow-lg w-full max-w-md overflow-hidden animate-fade-in-up">
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h2 className="text-lg font-medium">Enquire About This Product</h2>
           <Button
@@ -119,21 +159,54 @@ const ProductEnquiryModal = ({ product, onClose }) => {
         </div>
 
         <div className="p-4">
-          {/* Product Info */}
-          <div className="flex gap-3 mb-4 p-3 bg-muted/30 rounded-lg">
-            {product.images?.[0] && (
-              <img
-                src={product.images[0].url}
-                alt={product.images[0].alt || product.name}
-                className="w-16 h-16 object-cover rounded"
-              />
-            )}
-            <div>
-              <h3 className="font-medium">{product.name}</h3>
-              <p className="text-sm text-muted-foreground">
-                ₹{product.price.toLocaleString()}
-              </p>
+          {/* Product Info with Image Gallery */}
+          <div className="mb-4 p-3 bg-muted/30 rounded-lg">
+            <div className="flex gap-3 mb-3">
+              {/* Main Image */}
+              {productImages.length > 0 && (
+                <div className="relative w-20 h-20 rounded overflow-hidden bg-white flex-shrink-0">
+                  <img
+                    src={getImageUrl(currentImage)}
+                    alt={product.name}
+                    className="w-full h-full object-contain"
+                  />
+                  {productImages.length > 1 && (
+                    <div className="absolute bottom-0 right-0 bg-black/60 text-white px-1.5 py-0.5 text-[10px] rounded-tl">
+                      {selectedImageIndex + 1}/{productImages.length}
+                    </div>
+                  )}
+                </div>
+              )}
+              <div className="flex-1">
+                <h3 className="font-medium">{product.name}</h3>
+                <p className="text-sm text-muted-foreground">
+                  ₹{product.price.toLocaleString()}
+                </p>
+              </div>
             </div>
+
+            {/* Horizontal Thumbnail Gallery */}
+            {productImages.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto hide-scrollbar">
+                {productImages.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedImageIndex(idx)}
+                    className={`flex-shrink-0 w-12 h-12 rounded overflow-hidden border-2 transition-all ${
+                      selectedImageIndex === idx
+                        ? 'border-primary ring-2 ring-primary/20'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <img
+                      src={getImageUrl(img)}
+                      alt={`${product.name} ${idx + 1}`}
+                      className="w-full h-full object-contain"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Contact Options */}
@@ -260,6 +333,14 @@ const ProductEnquiryModal = ({ product, onClose }) => {
         </div>
       </div>
     </div>
+    
+    {showLoginModal && (
+      <LoginModal 
+        onClose={() => setShowLoginModal(false)} 
+        onLoginSuccess={handleLoginSuccess}
+      />
+    )}
+    </>
   );
 };
 

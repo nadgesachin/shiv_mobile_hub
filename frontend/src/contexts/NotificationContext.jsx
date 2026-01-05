@@ -1,6 +1,5 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useRef } from 'react';
 import apiService from '../services/api';
-import socketService from '../services/socket';
 import { useAuth } from './AuthContext';
 
 // Initial state
@@ -96,24 +95,12 @@ export const NotificationProvider = ({ children }) => {
   const [state, dispatch] = useReducer(notificationReducer, initialState);
   const { user, isAuthenticated } = useAuth();
   
-  // Initialize socket connection and load notifications when user is authenticated
+  const hasLoadedRef = useRef(false);
+  
+  // Load notifications once when user is authenticated
   useEffect(() => {
-    if (isAuthenticated() && user) {
-      // Socket event listener for new notifications
-      const notificationUnsub = socketService.on('notification', notification => {
-        dispatch({
-          type: NOTIFICATION_ACTIONS.ADD_NOTIFICATION,
-          payload: notification
-        });
-        
-        // Show browser notification if supported
-        if ('Notification' in window && Notification.permission === 'granted') {
-          new Notification(notification.title, {
-            body: notification.message,
-            icon: '/favicon.ico'
-          });
-        }
-      });
+    if (isAuthenticated() && user && !hasLoadedRef.current) {
+      hasLoadedRef.current = true;
       
       // Load notifications and unread count
       loadNotifications();
@@ -123,11 +110,11 @@ export const NotificationProvider = ({ children }) => {
       if ('Notification' in window && Notification.permission === 'default') {
         Notification.requestPermission();
       }
-      
-      // Cleanup function
-      return () => {
-        notificationUnsub();
-      };
+    }
+    
+    // Reset on logout
+    if (!isAuthenticated() || !user) {
+      hasLoadedRef.current = false;
     }
   }, [user, isAuthenticated]);
   

@@ -25,7 +25,10 @@ router.get('/', async (req, res) => {
       isActive = true
     } = req.query;
 
-    const skip = (Number(page) - 1) * Number(limit);
+    // Fix NaN issue - ensure page and limit are valid numbers
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 20;
+    const skip = (pageNum - 1) * limitNum;
     const sortDirection = sortOrder === 'desc' ? -1 : 1;
 
     /* -------------------- CONDITION BUILDING -------------------- */
@@ -112,7 +115,7 @@ router.get('/', async (req, res) => {
       /* -------------------- SORT / PAGINATION -------------------- */
       { $sort: sortCriteria },
       { $skip: skip },
-      { $limit: Number(limit) },
+      { $limit: limitNum },
 
       /* -------------------- RESPONSE SHAPE -------------------- */
       {
@@ -148,10 +151,10 @@ router.get('/', async (req, res) => {
       data: {
         products,
         pagination: {
-          page: Number(page),
-          limit: Number(limit),
+          page: pageNum,
+          limit: limitNum,
           total: totalCount,
-          pages: Math.ceil(totalCount / limit)
+          pages: Math.ceil(totalCount / limitNum)
         }
       }
     });

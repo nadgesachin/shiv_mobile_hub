@@ -119,6 +119,109 @@ const Header = () => {
                   {item.label}
                 </Link>
               ))}
+              
+              {/* User Menu for Authenticated Users */}
+              {isAuthenticated() ? (
+                <div style={{ marginTop: '9px', display: 'flex' }}>
+                  {/* Notifications */}
+                  <NotificationDropdown />
+                  
+                  {/* User Profile Dropdown */}
+                  <div className="relative  ">
+                    <button
+                      onClick={() => setShowUserMenu(!showUserMenu)}
+                      className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition"
+                    >
+                      {user?.avatar ? (
+                        <img
+                          src={user.avatar}
+                          alt={user.name}
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-gradient-orange-purple flex items-center justify-center text-white font-semibold">
+                          {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                        </div>
+                      )}
+                      <span className="text-sm font-medium hidden xl:block">{user?.name || 'User'}</span>
+                      <Icon name="ChevronDown" size={16} className={`transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {/* Dropdown Menu */}
+                    <AnimatePresence>
+                      {showUserMenu && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
+                        >
+                          <div className="px-4 py-2 border-b">
+                            <p className="text-sm font-semibold">{user?.name}</p>
+                            <p className="text-xs text-gray-500">{user?.email}</p>
+                          </div>
+                          
+                          {isAdmin() && (
+                            <Link
+                              to="/admin/dashboard"
+                              className="flex items-center space-x-2 px-4 py-2 hover:bg-gray-50 text-sm"
+                              onClick={() => setShowUserMenu(false)}
+                            >
+                              <Icon name="LayoutDashboard" size={16} />
+                              <span>Admin Dashboard</span>
+                            </Link>
+                          )}
+                          
+                          <Link
+                            to="/profile"
+                            className="flex items-center space-x-2 px-4 py-2 hover:bg-gray-50 text-sm"
+                            onClick={() => setShowUserMenu(false)}
+                          >
+                            <Icon name="User" size={16} />
+                            <span>My Profile</span>
+                          </Link>
+                          
+                          <Link
+                            to="/chat"
+                            className="flex items-center space-x-2 px-4 py-2 hover:bg-gray-50 text-sm"
+                            onClick={() => setShowUserMenu(false)}
+                          >
+                            <Icon name="MessageCircle" size={16} />
+                            <span>Messages</span>
+                          </Link>
+                          
+                          <div className="border-t my-2"></div>
+                          
+                          <button
+                            onClick={handleLogout}
+                            className="flex items-center space-x-2 px-4 py-2 hover:bg-red-50 text-red-600 text-sm w-full text-left"
+                          >
+                            <Icon name="LogOut" size={16} />
+                            <span>Logout</span>
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    className="ml-4"
+                    onClick={() => navigate('/login')}
+                  >
+                    Login
+                  </Button>
+                  <Button
+                    variant="default"
+                    className="ml-2"
+                    onClick={() => navigate('/signup')}
+                  >
+                    Sign Up
+                  </Button>
+                </>
+              )}
             </nav>
 
             {/* Mobile Menu Button */}
@@ -177,6 +280,88 @@ const Header = () => {
                     {item.label}
                   </Link>
                 ))}
+                {isAuthenticated() ? (
+                  <>
+                    <div className="px-4 py-3 bg-gray-50 rounded-lg mb-2">
+                      <div className="flex items-center space-x-3">
+                        {user?.avatar ? (
+                          <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-gradient-orange-purple flex items-center justify-center text-white font-semibold">
+                            {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-semibold text-sm">{user?.name}</p>
+                          <p className="text-xs text-gray-500">{user?.email}</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {isAdmin() && (
+                      <Link
+                        to="/admin/dashboard"
+                        className="flex items-center space-x-2 px-4 py-3 rounded-lg hover:bg-orange-50"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <Icon name="LayoutDashboard" size={18} />
+                        <span>Admin Dashboard</span>
+                      </Link>
+                    )}
+                    
+                    <Link
+                      to="/profile"
+                      className="flex items-center space-x-2 px-4 py-3 rounded-lg hover:bg-orange-50"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Icon name="User" size={18} />
+                      <span>My Profile</span>
+                    </Link>
+                    
+                    <Link
+                      to="/chat"
+                      className="flex items-center space-x-2 px-4 py-3 rounded-lg hover:bg-orange-50"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Icon name="MessageCircle" size={18} />
+                      <span>Messages</span>
+                    </Link>
+                    
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="flex items-center space-x-2 px-4 py-3 rounded-lg hover:bg-red-50 text-red-600 w-full text-left mt-2"
+                    >
+                      <Icon name="LogOut" size={18} />
+                      <span>Logout</span>
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      className="w-full mt-2"
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        navigate('/login');
+                      }}
+                    >
+                      Login
+                    </Button>
+                    <Button
+                      variant="default"
+                      className="w-full mt-2"
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        navigate('/signup');
+                      }}
+                    >
+                      Sign Up
+                    </Button>
+                  </>
+                )}
               </div>
             </motion.div>
           </>

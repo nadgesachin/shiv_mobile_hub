@@ -1,9 +1,7 @@
+import ForgotPassword from './ForgotPassword';
+
 const ForgotPasswordPage = () => {
-    return (
-        <div>
-            <h1>Forgot Password Page</h1>
-        </div>
-    );
+    return <ForgotPassword />;
 };
 
 export default ForgotPasswordPage;

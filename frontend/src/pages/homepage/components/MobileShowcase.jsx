@@ -9,6 +9,8 @@ import { HoverScale, ScaleIn, ShimmerLoader, Interactive } from '../../../compon
 import MobileSwipe from '../../../components/ui/animations/MobileSwipe';
 import useViewport from '../../../hooks/useViewport';
 import ProductSection from './ProductSection';
+import { ProductSectionSkeleton, CategoryCardSkeleton } from '../../../components/ui/SkeletonLoader';
+import EmptyState from '../../../components/ui/EmptyState';
 
 // Animation variants for cards
 const cardVariants = {
@@ -96,14 +98,18 @@ const MobileShowcase = () => {
       )
       .slice(0, 8)
       .map(product => ({
+        _id: product._id,
         id: product._id,
         title: product.name,
+        name: product.name,
         price: product.price,
         originalPrice: product.originalPrice,
+        description: product.description,
         discount: product.originalPrice > product.price
           ? `${Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF`
           : null,
         image: product.images?.[0]?.url || 'https://images.unsplash.com/photo-1707410420102-faff6eb0e033',
+        images: product.images || [],
         badgeText: product.badge,
         badgeColor: product.badge === 'New Arrival' ? 'from-secondary to-accent text-white' :
           product.badge === 'Bestseller' ? 'from-accent to-secondary text-white' :
@@ -223,91 +229,45 @@ const MobileShowcase = () => {
     setLoadedImages(prev => ({ ...prev, [id]: true }));
   };
 
-  // Loading state with shimmer effects
+  // Loading state with skeleton loaders
   if (loading) {
     return (
-      <section className="py-8 lg:py-16 overflow-hidden bg-gradient-to-b from-white via-white to-muted">
+      <section className="py-6 lg:py-12 overflow-hidden bg-gradient-to-b from-white via-white to-muted">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Heading shimmer */}
-          <div className="mb-8 flex flex-col items-center">
-            <ShimmerLoader width="240px" height="32px" className="mb-4 rounded-xl" />
-            <ShimmerLoader width="160px" height="20px" className="rounded-lg" />
-          </div>
-
-          {/* Category cards shimmer */}
-          <div className="mb-10">
-            <ShimmerLoader width="200px" height="26px" className="mb-4 rounded-lg" />
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+          {/* Categories skeleton */}
+          <div className="mb-8">
+            <div className="flex gap-4 overflow-hidden pb-2">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="rounded-xl overflow-hidden">
-                  <ShimmerLoader width="100%" height="80px" className="rounded-xl" />
-                </div>
+                <CategoryCardSkeleton key={i} />
               ))}
             </div>
           </div>
 
-          {/* Products shimmer */}
-          <div className="mb-10">
-            <div className="flex justify-between items-center mb-4">
-              <ShimmerLoader width="180px" height="26px" className="rounded-lg" />
-              <div className="flex space-x-2">
-                <ShimmerLoader width="32px" height="32px" className="rounded-full" />
-                <ShimmerLoader width="32px" height="32px" className="rounded-full" />
-              </div>
-            </div>
-            <div className="flex space-x-4 overflow-hidden pb-4">
-              {[...Array(3)].map((_, i) => (
-                <ShimmerLoader
-                  key={i}
-                  width="280px"
-                  height="360px"
-                  className="rounded-xl flex-shrink-0"
-                />
-              ))}
-            </div>
-          </div>
+          {/* Product sections skeleton */}
+          <ProductSectionSkeleton count={4} />
+          <ProductSectionSkeleton count={4} />
         </div>
       </section>
     );
   }
 
-  // Error state with animation
+  // Error state with empty state component
   if (error) {
     return (
       <section className="py-12 lg:py-20 overflow-hidden bg-gradient-to-b from-white via-white to-muted">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="max-w-md mx-auto bg-white rounded-2xl shadow-md p-8 text-center border border-gray-100"
-          >
-            <motion.div
-              animate={{ rotate: [0, -10, 10, 0] }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="mx-auto w-16 h-16 mb-4 flex items-center justify-center rounded-full bg-red-50 text-red-500"
-            >
-              <Icon name="AlertTriangle" size={32} />
-            </motion.div>
-            <h3 className="text-xl font-semibold mb-2">Failed to Load Products</h3>
-            <p className="text-muted-foreground mb-6">{error}</p>
-            <Interactive>
-              <button
-                onClick={() => {
-                  setLoading(true);
-                  setError('');
-                  getSections();
-                  getProducts();
-                }}
-                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-secondary to-accent text-white font-medium shadow-sm hover:shadow-md transition-all duration-300"
-              >
-                <span className="flex items-center justify-center gap-2">
-                  <Icon name="RefreshCw" size={16} />
-                  Try Again
-                </span>
-              </button>
-            </Interactive>
-          </motion.div>
+          <EmptyState
+            icon="AlertTriangle"
+            title="Failed to Load Products"
+            description={error}
+            actionLabel="Try Again"
+            onAction={() => {
+              setLoading(true);
+              setError('');
+              getSections();
+              getProducts();
+            }}
+          />
         </div>
       </section>
     );

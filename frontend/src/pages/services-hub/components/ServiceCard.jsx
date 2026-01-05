@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import ServiceEnquiryModal from '../../../components/services/ServiceEnquiryModal';
 
-const ServiceCard = ({ service, onBookNow, viewMode = 'grid' }) => {
+const ServiceCard = ({ service, viewMode = 'grid' }) => {
+  const [showEnquiryModal, setShowEnquiryModal] = useState(false);
   const {
     id,
     name,
@@ -21,7 +23,8 @@ const ServiceCard = ({ service, onBookNow, viewMode = 'grid' }) => {
 
   if (viewMode === 'list') {
     return (
-      <div className="flex flex-col sm:flex-row items-stretch bg-card rounded-xl border border-border p-4 gap-4 shadow-sm hover:shadow-md transition-smooth group relative overflow-hidden">
+      <>
+        <Link to={`/services-hub/${service._id || service.id}`} className="flex flex-col sm:flex-row items-stretch bg-card rounded-xl border border-border p-4 gap-4 shadow-sm hover:shadow-md transition-smooth group relative overflow-hidden">
         {popular && (
           <div className="absolute top-0 right-0 bg-accent text-accent-foreground text-xs font-semibold px-3 py-1 rounded-bl-lg">
             Popular
@@ -68,7 +71,11 @@ const ServiceCard = ({ service, onBookNow, viewMode = 'grid' }) => {
               size="sm"
               iconName="Calendar"
               iconPosition="left"
-              onClick={() => onBookNow(service)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowEnquiryModal(true);
+              }}
             >
               Book Now
             </Button>
@@ -81,13 +88,22 @@ const ServiceCard = ({ service, onBookNow, viewMode = 'grid' }) => {
             )}
           </div>
         </div>
-      </div>
+        </Link>
+        
+        {showEnquiryModal && (
+          <ServiceEnquiryModal 
+            service={service} 
+            onClose={() => setShowEnquiryModal(false)} 
+          />
+        )}
+      </>
     );
   }
 
   // Grid view (default)
   return (
-    <div className="bg-card rounded-xl border border-border p-5 hover:shadow-md transition-smooth group relative overflow-hidden flex flex-col">
+    <>
+      <Link to={`/services-hub/${service._id || service.id}`} className="bg-card rounded-xl border border-border p-5 hover:shadow-md transition-smooth group relative overflow-hidden flex flex-col">
       {popular && (
         <div className="absolute top-0 right-0 bg-accent text-accent-foreground text-xs font-semibold px-3 py-1 rounded-bl-lg">
           Popular
@@ -132,7 +148,11 @@ const ServiceCard = ({ service, onBookNow, viewMode = 'grid' }) => {
           fullWidth
           iconName="Calendar"
           iconPosition="left"
-          onClick={() => onBookNow(service)}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setShowEnquiryModal(true);
+          }}
         >
           Book Now
         </Button>
@@ -144,7 +164,15 @@ const ServiceCard = ({ service, onBookNow, viewMode = 'grid' }) => {
           </Link>
         )}
       </div>
-    </div>
+    </Link>
+
+    {showEnquiryModal && (
+      <ServiceEnquiryModal 
+        service={service} 
+        onClose={() => setShowEnquiryModal(false)} 
+      />
+    )}
+    </>
   );
 };
 

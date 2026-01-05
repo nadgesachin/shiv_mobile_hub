@@ -15,9 +15,9 @@ const serviceSchema = new mongoose.Schema({
     required: true
   },
   category: {
-    type: String,
-    required: true,
-    enum: ['mobile-services', 'government-services', 'financial-services', 'digital-services']
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category',
+    required: true
   },
   subcategory: {
     type: String

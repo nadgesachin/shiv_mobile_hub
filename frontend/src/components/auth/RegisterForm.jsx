@@ -5,6 +5,7 @@ import apiService from '../../services/api';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import Toast from '../ui/Toast';
+import { GoogleLogin } from '@react-oauth/google';
 
 const RegisterForm = () => {
   const [formData, setFormData] = useState({
@@ -75,6 +76,51 @@ const RegisterForm = () => {
     }
   };
 
+  // Google Sign-In Handler
+  const handleGoogleSuccess = async (credentialResponse) => {
+    const { credential } = credentialResponse;
+    
+    try {
+      setLoading(true);
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const response = await fetch(`${API_URL}/api/auth/google-login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ idToken: credential }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success && data.token && data.user) {
+        // Update auth context (this will save to localStorage and update state)
+        login(data.user, data.token);
+        
+        Toast.success('Account created successfully!');
+        
+        // Redirect based on user role
+        if (data.user.role === 'admin') {
+          navigate('/admin/dashboard', { replace: true });
+        } else {
+          navigate('/', { replace: true });
+        }
+      } else {
+        Toast.error(data.error || 'Google sign-up failed');
+      }
+    } catch (error) {
+      console.error('Google sign-up error:', error);
+      Toast.error('Google sign-up failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleFailure = () => {
+    console.error('Google sign-up failed');
+    Toast.error('Google sign-up failed. Please try again.');
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <Input
@@ -128,6 +174,30 @@ const RegisterForm = () => {
       >
         {loading ? 'Creating Account...' : 'Create Account'}
       </Button>
+
+      {/* Divider */}
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-border"></div>
+        </div>
+        <div className="relative flex justify-center text-sm">
+          <span className="px-2 bg-card text-muted-foreground">Or continue with</span>
+        </div>
+      </div>
+
+      {/* Google Sign-In */}
+      <div className="w-full flex justify-center">
+        <GoogleLogin
+          onSuccess={handleGoogleSuccess}
+          onError={handleGoogleFailure}
+          type="standard"
+          theme="outline"
+          size="large"
+          text="signup_with"
+          shape="rectangular"
+          width="384"
+        />
+      </div>
     </form>
   );
 };

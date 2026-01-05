@@ -3,6 +3,7 @@ import apiService from '../../services/api';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
+import Toast from '../../components/ui/Toast';
 
 const SectionsManagement = () => {
   const [sections, setSections] = useState([]);
@@ -13,6 +14,7 @@ const SectionsManagement = () => {
   const [selectedSection, setSelectedSection] = useState(null);
   const [iconDropdownOpen, setIconDropdownOpen] = useState(false);
   const [iconSearch, setIconSearch] = useState('');
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, sectionId: null, sectionName: '' });
 
   // Style options for the section display
   const styleOptions = [
@@ -105,7 +107,9 @@ const SectionsManagement = () => {
       setSections(response.data.sections || []);
       setError('');
     } catch (err) {
+      console.error('Error fetching sections:', err);
       setError(err.message || 'Failed to fetch sections');
+      Toast.error('Failed to load sections');
     } finally {
       setLoading(false);
     }
@@ -155,12 +159,15 @@ const SectionsManagement = () => {
     try {
       setLoading(true);
       await apiService.createAdminSection(formData);
+      Toast.success('Section created successfully!');
       await fetchSections();
       setIsFormOpen(false);
       resetForm();
       setError('');
     } catch (err) {
+      console.error('Error creating section:', err);
       setError(err.message || 'Failed to create section');
+      Toast.error('Failed to create section');
     } finally {
       setLoading(false);
     }
@@ -173,6 +180,7 @@ const SectionsManagement = () => {
     try {
       setLoading(true);
       await apiService.updateAdminSection(selectedSection._id, formData);
+      Toast.success('Section updated successfully!');
       await fetchSections();
       setIsFormOpen(false);
       resetForm();
@@ -180,7 +188,9 @@ const SectionsManagement = () => {
       setSelectedSection(null);
       setError('');
     } catch (err) {
+      console.error('Error updating section:', err);
       setError(err.message || 'Failed to update section');
+      Toast.error('Failed to update section');
     } finally {
       setLoading(false);
     }
@@ -188,18 +198,32 @@ const SectionsManagement = () => {
 
   // Handle section deletion
   const handleDeleteSection = async (id) => {
-    if (window.confirm('Are you sure you want to delete this section?')) {
-      try {
-        setLoading(true);
-        await apiService.deleteAdminSection(id);
-        await fetchSections();
-        setError('');
-      } catch (err) {
-        setError(err.message || 'Failed to delete section');
-      } finally {
-        setLoading(false);
-      }
+    const section = sections.find(s => s._id === id);
+    setDeleteModal({ isOpen: true, sectionId: id, sectionName: section?.title || section?.name || 'this section' });
+  };
+
+  // Confirm deletion
+  const confirmDelete = async () => {
+    try {
+      setLoading(true);
+      await apiService.deleteAdminSection(deleteModal.sectionId);
+      Toast.success('Section deleted successfully!');
+      await fetchSections();
+      setError('');
+      setDeleteModal({ isOpen: false, sectionId: null, sectionName: '' });
+    } catch (err) {
+      console.error('Error deleting section:', err);
+      setError(err.message || 'Failed to delete section');
+      Toast.error('Failed to delete section');
+      setDeleteModal({ isOpen: false, sectionId: null, sectionName: '' });
+    } finally {
+      setLoading(false);
     }
+  };
+
+  // Cancel deletion
+  const cancelDelete = () => {
+    setDeleteModal({ isOpen: false, sectionId: null, sectionName: '' });
   };
 
   // Open create form
@@ -210,29 +234,46 @@ const SectionsManagement = () => {
     setIsFormOpen(true);
   };
 
-  // Open edit form
-  const handleEditSection = (section) => {
-    setSelectedSection(section);
-    setFormData({
-      name: section.name,
-      icon: section.icon,
-      title: section.title,
-      subtitle: section.subtitle || '',
-      description: section.description || '',
-      maxProducts: section.maxProducts,
-      isActive: section.isActive,
-      displayOrder: section.displayOrder,
-      style: section.style || 'DailyDeals',
-      settings: {
-        showBadge: section.settings?.showBadge ?? true,
-        showRating: section.settings?.showRating ?? true,
-        showDiscount: section.settings?.showDiscount ?? true,
-        autoUpdate: section.settings?.autoUpdate ?? false,
-        updateCriteria: section.settings?.updateCriteria || 'newest'
+  // Open edit form - fetch fresh data from API
+  const handleEditSection = async (section) => {
+    try {
+      setLoading(true);
+      const response = await apiService.request(`/sections/${section._id}`);
+      
+      if (response.success && response.data) {
+        const fetchedSection = response.data;
+        setSelectedSection(fetchedSection);
+        setFormData({
+          name: fetchedSection.name,
+          icon: fetchedSection.icon,
+          title: fetchedSection.title,
+          subtitle: fetchedSection.subtitle || '',
+          description: fetchedSection.description || '',
+          maxProducts: fetchedSection.maxProducts,
+          isActive: fetchedSection.isActive,
+          displayOrder: fetchedSection.displayOrder,
+          style: fetchedSection.style || 'DailyDeals',
+          settings: {
+            showBadge: fetchedSection.settings?.showBadge ?? true,
+            showRating: fetchedSection.settings?.showRating ?? true,
+            showDiscount: fetchedSection.settings?.showDiscount ?? true,
+            autoUpdate: fetchedSection.settings?.autoUpdate ?? false,
+            updateCriteria: fetchedSection.settings?.updateCriteria || 'newest'
+          }
+        });
+        setIsEditing(true);
+        setIsFormOpen(true);
+      } else {
+        setError('Failed to fetch section details');
+        Toast.error('Failed to load section details');
       }
-    });
-    setIsEditing(true);
-    setIsFormOpen(true);
+    } catch (err) {
+      console.error('Error fetching section:', err);
+      setError(err.message || 'Failed to load section details');
+      Toast.error('Failed to load section details');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Close form
@@ -651,6 +692,43 @@ const SectionsManagement = () => {
                   </Button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal.isOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="p-3 bg-error/10 rounded-full">
+                <Icon name="AlertTriangle" size={24} className="text-error" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-foreground mb-2">
+                  Delete Section?
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Are you sure you want to delete <span className="font-semibold text-foreground">{deleteModal.sectionName}</span>? This action cannot be undone.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 justify-end">
+              <Button
+                variant="outline"
+                onClick={cancelDelete}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="default"
+                onClick={confirmDelete}
+                className="bg-error hover:bg-error/90 text-white"
+              >
+                <Icon name="Trash2" size={16} className="mr-2" />
+                Delete
+              </Button>
             </div>
           </div>
         </div>

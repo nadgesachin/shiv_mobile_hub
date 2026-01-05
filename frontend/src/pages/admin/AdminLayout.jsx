@@ -16,6 +16,7 @@ const AdminLayout = () => {
     { path: '/admin/services', label: 'Services', icon: 'Wrench' },
     { path: '/admin/users', label: 'Users', icon: 'Users' },
     { path: '/admin/pages', label: 'Pages', icon: 'FileText' },
+    { path: '/admin/posters', label: 'Posters', icon: 'Image' },
     { path: '/admin/settings', label: 'Settings', icon: 'Settings' },
   ];
 

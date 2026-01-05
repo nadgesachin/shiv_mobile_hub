@@ -5,6 +5,7 @@ import MobileHeader from '../../components/ui/MobileHeader';
 import CompactCategoryNav from '../../components/ui/CompactCategoryNav';
 import MobileProductGrid from '../../components/products/MobileProductGrid';
 import SlimDealBanner from '../../components/ui/SlimDealBanner';
+import ShopLocationMap from '../../components/ui/ShopLocationMap';
 import Icon from '../../components/AppIcon';
 
 // Optimized section loading with scroll tracking
@@ -163,6 +164,7 @@ const MobileHomepage = () => {
             products={getProductsForSection(section.id)}
             viewAllUrl={`/products-catalog?section=${section.id}`}
             loading={false}
+            layout="horizontal"
           />
         </React.Fragment>
       ))}
@@ -173,6 +175,11 @@ const MobileHomepage = () => {
           <div className="w-6 h-6 border-2 border-gray-300 border-t-primary rounded-full animate-spin"></div>
         </div>
       )}
+      
+      {/* Shop Location Map */}
+      <div className="px-3 mt-4">
+        <ShopLocationMap />
+      </div>
       
       {/* Floating cart button */}
       <AnimatePresence>
