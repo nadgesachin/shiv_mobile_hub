@@ -188,8 +188,11 @@ const ReviewList = ({ productId, serviceId }) => {
       }
       
       const response = await apiService.getReviews(params);
-      
-      const { reviews: newReviews, summary: newSummary, pagination } = response.data;
+
+      // Backend returns { success, reviews, summary, pagination } at the root.
+      // Older versions nested under `data` — accept both.
+      const payload = response?.data && response.data.reviews ? response.data : response;
+      const { reviews: newReviews = [], summary: newSummary, pagination } = payload || {};
       
       if (pageNum === 1) {
         setReviews(newReviews);

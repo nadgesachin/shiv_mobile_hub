@@ -15,6 +15,7 @@ const AdminLayout = () => {
     { path: '/admin/banners', label: 'Banners', icon: 'Image' },
     { path: '/admin/services', label: 'Services', icon: 'Wrench' },
     { path: '/admin/users', label: 'Users', icon: 'Users' },
+    { path: '/admin/customers', label: 'Customers & Campaigns', icon: 'UsersRound' },
     { path: '/admin/pages', label: 'Pages', icon: 'FileText' },
     { path: '/admin/posters', label: 'Posters', icon: 'Image' },
     { path: '/admin/settings', label: 'Settings', icon: 'Settings' },

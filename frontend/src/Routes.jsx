@@ -26,6 +26,7 @@ import ServicesManagement from './pages/admin/ServicesManagement';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminGuard from './pages/admin/AdminGuard';
 import UsersManagement from './pages/admin/UsersManagement';
+import CustomerSegments from './pages/admin/CustomerSegments';
 import CategoriesManagement from './pages/admin/CategoriesManagement';
 import SectionsManagement from './pages/admin/SectionsManagement';
 import BannersManagement from './pages/admin/BannersManagement';
@@ -38,6 +39,7 @@ import NotificationsPage from './pages/notifications/NotificationsPage';
 import { ChatProvider } from './contexts/ChatContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import ChatWidget from './components/chat/ChatWidget';
+import LeadCaptureWidget from './components/LeadCaptureWidget';
 const Routes = () => {
   return (
     <BrowserRouter>
@@ -61,6 +63,7 @@ const Routes = () => {
           <Route path="categories" element={<CategoriesManagement />} />
           <Route path="services" element={<ServicesManagement />} />
           <Route path="users" element={<UsersManagement />} />
+          <Route path="customers" element={<CustomerSegments />} />
           <Route path="orders" element={<div>Order Management</div>} />
           <Route path="analytics" element={<div>Analytics Dashboard</div>} />
           <Route path="pages" element={<PagesManagement />} />
@@ -107,7 +110,10 @@ const Routes = () => {
       
       {/* Floating Chat Widget */}
       {/* <ChatWidget /> */}
-      
+
+      {/* Site-wide lead-capture pill — auto-hidden on admin/auth pages */}
+      <LeadCaptureWidget />
+
       </NotificationProvider>
       </ChatProvider>
       </ErrorBoundary>

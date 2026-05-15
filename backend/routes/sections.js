@@ -9,22 +9,28 @@ require('../config/passport')(passport);
 const adminAuth = passport.authenticate('jwt', { session: false });
 
 // @route   GET /api/sections
-// @desc    Get all sections with products
+// @desc    Get all sections with products (respects each section's maxProducts)
 router.get('/', async (req, res) => {
   try {
     const sections = await Section.find({ isActive: true })
       .sort({ displayOrder: 1 })
       .populate({
         path: 'products',
-        match: { isActive: true },
-        options: { limit: 10 }
-      });
+        match: { isActive: true }
+      })
+      .lean();
+
+    // Trim each section's products to its own maxProducts (avoids one global cap)
+    const trimmed = sections.map((s) => ({
+      ...s,
+      products: Array.isArray(s.products)
+        ? s.products.slice(0, s.maxProducts || 12)
+        : [],
+    }));
 
     res.json({
       success: true,
-      data: {
-        sections
-      }
+      data: { sections: trimmed },
     });
   } catch (error) {
     console.error('Get sections error:', error);
@@ -39,14 +45,13 @@ router.get('/', async (req, res) => {
 // @desc    Get specific section with products
 router.get('/:name', async (req, res) => {
   try {
-    const section = await Section.findOne({ 
-      name: req.params.name, 
-      isActive: true 
+    const section = await Section.findOne({
+      name: req.params.name,
+      isActive: true
     })
     .populate({
       path: 'products',
-      match: { isActive: true },
-      options: { limit: 10 }
+      match: { isActive: true }
     });
 
     if (!section) {

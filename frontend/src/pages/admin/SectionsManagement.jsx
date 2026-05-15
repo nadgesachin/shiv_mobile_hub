@@ -4,6 +4,37 @@ import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Toast from '../../components/ui/Toast';
+import { STYLE_CATALOG, resolveStyle } from '../homepage/components/sectionStyles';
+import StylePreview from '../homepage/components/sectionStyles/StylePreview';
+import SectionProductPicker from './SectionProductPicker';
+
+// Renders the visual mockup and description of the currently selected style.
+// Falls back to the closest new style when an existing section has a legacy value.
+const StylePreviewInline = ({ value, options }) => {
+  const resolved = resolveStyle(value);
+  const sel =
+    options?.find((o) => o.value === value) ||
+    options?.find((o) => o.value === resolved);
+  if (!sel) return null;
+  return (
+    <div className="flex flex-col sm:flex-row gap-3 mt-2">
+      <div className="sm:w-1/2">
+        <StylePreview style={sel.value} />
+      </div>
+      <div className="sm:w-1/2 text-xs text-muted-foreground flex items-start gap-2">
+        <Icon name={sel.icon || 'Info'} size={14} className="mt-0.5 flex-shrink-0" />
+        <span>
+          {sel.description}
+          {sel.suggestedMax && (
+            <div className="mt-1 text-foreground/70">
+              Recommended max products: <b>{sel.suggestedMax}</b>
+            </div>
+          )}
+        </span>
+      </div>
+    </div>
+  );
+};
 
 const SectionsManagement = () => {
   const [sections, setSections] = useState([]);
@@ -15,19 +46,17 @@ const SectionsManagement = () => {
   const [iconDropdownOpen, setIconDropdownOpen] = useState(false);
   const [iconSearch, setIconSearch] = useState('');
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, sectionId: null, sectionName: '' });
+  const [productPickerFor, setProductPickerFor] = useState(null);
 
-  // Style options for the section display
-  const styleOptions = [
-    { value: 'DailyDeals', label: 'Daily Deals' },
-    { value: 'TrendingProducts', label: 'Trending Products' },
-    { value: 'BestsellingProducts', label: 'Bestselling Products' },
-    { value: 'LowPriceProducts', label: 'Low Price Products' },
-    { value: 'LiveShopBanner', label: 'Live Shop Banner' },
-    { value: 'TopOffers', label: 'Top Offers' },
-    { value: 'BrandDhamaka', label: 'Brand Dhamaka' },
-    { value: 'ForYouProductSection', label: 'For You' },
-    { value: 'CategoryGrid', label: 'Category Grid' }
-  ];
+  // Style options are sourced from the renderer catalog so the dropdown
+  // automatically tracks new styles as they're added.
+  const styleOptions = STYLE_CATALOG.map((s) => ({
+    value: s.value,
+    label: s.label,
+    description: s.description,
+    icon: s.icon,
+    suggestedMax: s.suggestedMax,
+  }));
 
   const [formData, setFormData] = useState({
     name: '',
@@ -38,7 +67,7 @@ const SectionsManagement = () => {
     maxProducts: 10,
     isActive: true,
     displayOrder: 0,
-    style: 'DailyDeals', // Default style
+    style: 'MultiColumnGrid', // Default style
     settings: {
       showBadge: true,
       showRating: true,
@@ -295,7 +324,7 @@ const SectionsManagement = () => {
       maxProducts: 10,
       isActive: true,
       displayOrder: 0,
-      style: 'DailyDeals',
+      style: 'MultiColumnGrid',
       settings: {
         showBadge: true,
         showRating: true,
@@ -396,7 +425,15 @@ const SectionsManagement = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => setProductPickerFor(section)}
+                  >
+                    <Icon name="Package" size={14} className="mr-1" />
+                    Manage products
+                  </Button>
                   <Button variant="outline" size="sm" onClick={() => handleEditSection(section)}>
                     <Icon name="Edit" size={14} className="mr-1" />
                     Edit
@@ -545,8 +582,13 @@ const SectionsManagement = () => {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium">Style</label>
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="block text-sm font-medium">
+                      Layout style
+                      <span className="ml-2 text-xs font-normal text-muted-foreground">
+                        — controls how this section is rendered on the homepage
+                      </span>
+                    </label>
                     <select
                       name="style"
                       value={formData.style}
@@ -559,6 +601,7 @@ const SectionsManagement = () => {
                         </option>
                       ))}
                     </select>
+                    <StylePreviewInline value={formData.style} options={styleOptions} />
                   </div>
 
                   <div className="space-y-2">
@@ -732,6 +775,14 @@ const SectionsManagement = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {productPickerFor && (
+        <SectionProductPicker
+          section={productPickerFor}
+          onClose={() => setProductPickerFor(null)}
+          onSaved={() => fetchSections()}
+        />
       )}
     </div>
   );

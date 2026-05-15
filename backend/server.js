@@ -37,10 +37,14 @@ const server = http.createServer(app);
 // app.use(helmet());
 app.use(compression());
 
-// Rate limiting
+// Rate limiting — relaxed in dev to avoid blocking active testing.
+// In production, tighten this (or restore to 100) before deploying.
+const isProd = process.env.NODE_ENV === 'production';
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  max: isProd ? 200 : 5000,
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/', limiter);

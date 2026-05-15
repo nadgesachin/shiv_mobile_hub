@@ -704,6 +704,19 @@ class ApiService {
     });
   }
 
+  // Public Banners
+  async getBanners(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/banners${query ? `?${query}` : ''}`, {
+      method: 'GET',
+    }, { useCache: true, cacheTime: 5 });
+  }
+
+  // Public Settings (site-wide config used by the homepage chrome)
+  async getPublicSettings() {
+    return this.request('/settings', { method: 'GET' }, { useCache: true, cacheTime: 10 });
+  }
+
 }
 
 // Create and export singleton instance
