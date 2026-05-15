@@ -37,7 +37,11 @@ const ServiceEnquiryModal = ({ service, onClose }) => {
       {
         name: service.name,
 <<<<<<< HEAD
+<<<<<<< HEAD
         url: `${window.location.origin}/services-hub/${service._id}`,
+=======
+        url: `${window.location.origin}/services/${service._id}`,
+>>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
 =======
         url: `${window.location.origin}/services/${service._id}`,
 >>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
@@ -49,7 +53,11 @@ const ServiceEnquiryModal = ({ service, onClose }) => {
 
   const copyServiceLink = () => {
 <<<<<<< HEAD
+<<<<<<< HEAD
     const url = `${window.location.origin}/services-hub/${service._id}`;
+=======
+    const url = `${window.location.origin}/services/${service._id}`;
+>>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
 =======
     const url = `${window.location.origin}/services/${service._id}`;
 >>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
@@ -103,7 +111,11 @@ const ServiceEnquiryModal = ({ service, onClose }) => {
     }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     const url = encodeURIComponent(`${window.location.origin}/services-hub/${service._id}`);
+=======
+    const url = encodeURIComponent(`${window.location.origin}/services/${service._id}`);
+>>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
 =======
     const url = encodeURIComponent(`${window.location.origin}/services/${service._id}`);
 >>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
@@ -115,7 +127,11 @@ const ServiceEnquiryModal = ({ service, onClose }) => {
       Price: ₹${service.price}
       Duration: ${service.duration || 'N/A'}
 <<<<<<< HEAD
+<<<<<<< HEAD
       Link: ${window.location.origin}/services-hub/${service._id}
+=======
+      Link: ${window.location.origin}/services/${service._id}
+>>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
 =======
       Link: ${window.location.origin}/services/${service._id}
 >>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75

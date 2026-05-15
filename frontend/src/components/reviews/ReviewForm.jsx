@@ -78,7 +78,11 @@ const ReviewForm = ({ productId, serviceId, onReviewSubmitted }) => {
       
       // Submit review to API
 <<<<<<< HEAD
+<<<<<<< HEAD
       await apiService.createReview(reviewData);
+=======
+      await apiService.post('/api/reviews', reviewData);
+>>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
 =======
       await apiService.post('/api/reviews', reviewData);
 >>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
@@ -115,6 +119,7 @@ const ReviewForm = ({ productId, serviceId, onReviewSubmitted }) => {
         <h2 className="font-semibold mb-4">Write a Review</h2>
         
 <<<<<<< HEAD
+<<<<<<< HEAD
         {!isAuthenticated() && (
           <div className="mb-4 p-3 bg-warning/10 border border-warning/20 rounded-lg flex items-start gap-2">
             <Icon name="Info" size={18} className="text-warning mt-0.5" />
@@ -127,6 +132,8 @@ const ReviewForm = ({ productId, serviceId, onReviewSubmitted }) => {
           </div>
         )}
         
+=======
+>>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
 =======
 >>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
         <form onSubmit={handleSubmit} className="space-y-4">

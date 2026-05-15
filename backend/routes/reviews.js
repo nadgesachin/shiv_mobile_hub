@@ -68,6 +68,7 @@ router.get('/', async (req, res) => {
     // Build filter
     const filter = { status: 'approved' };
 <<<<<<< HEAD
+<<<<<<< HEAD
 
     // If a caller passes an invalid ObjectId (e.g. "general"), return an empty
     // result set instead of throwing a CastError 500.
@@ -95,6 +96,8 @@ router.get('/', async (req, res) => {
     }
 
 =======
+=======
+>>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
     
     if (req.query.productId) {
       filter.productId = req.query.productId;
@@ -104,6 +107,9 @@ router.get('/', async (req, res) => {
       filter.serviceId = req.query.serviceId;
     }
     
+<<<<<<< HEAD
+>>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
+=======
 >>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
     if (req.query.userId) {
       filter.userId = req.query.userId;

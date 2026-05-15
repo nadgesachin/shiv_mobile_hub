@@ -143,6 +143,7 @@ const Header = () => {
                 </Link>
               ))}
 <<<<<<< HEAD
+<<<<<<< HEAD
               
               {/* User Menu for Authenticated Users */}
               {isAuthenticated() ? (
@@ -229,6 +230,9 @@ const Header = () => {
                   </div>
                 </div>
               ) : (
+=======
+              {!isAuthenticated() && (
+>>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
 =======
               {!isAuthenticated() && (
 >>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
@@ -322,6 +326,7 @@ const Header = () => {
                   </Link>
                 ))}
 <<<<<<< HEAD
+<<<<<<< HEAD
                 {isAuthenticated() ? (
                   <>
                     <div className="px-4 py-3 bg-gray-50 rounded-lg mb-2">
@@ -381,6 +386,9 @@ const Header = () => {
                     </button>
                   </>
                 ) : (
+=======
+                {!isAuthenticated() && (
+>>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
 =======
                 {!isAuthenticated() && (
 >>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
