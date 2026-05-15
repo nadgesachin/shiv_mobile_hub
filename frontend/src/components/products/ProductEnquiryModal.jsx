@@ -18,6 +18,7 @@ const ProductEnquiryModal = ({ product, onClose }) => {
   });
   const [loading, setLoading] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+<<<<<<< HEAD
 
   // Get image URL from image object or string
   const getImageUrl = (img) => {
@@ -27,6 +28,8 @@ const ProductEnquiryModal = ({ product, onClose }) => {
 
   const productImages = product.images || [];
   const currentImage = productImages[selectedImageIndex] || productImages[0];
+=======
+>>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -103,14 +106,22 @@ const ProductEnquiryModal = ({ product, onClose }) => {
       return;
     }
 
+<<<<<<< HEAD
     const url = encodeURIComponent(`${window.location.origin}/products-catalog/${product._id}`);
+=======
+    const url = encodeURIComponent(`${window.location.origin}/products/${product._id}`);
+>>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
     const title = encodeURIComponent(`Check out ${product.name}`);
     const text = encodeURIComponent(`I found this amazing product: ${product.name}`);
     const productInfo = encodeURIComponent(`
       Product: ${product.name}
       Price: ₹${product.price}
       Description: ${product.description || 'No description available'}
+<<<<<<< HEAD
       Link: ${window.location.origin}/products-catalog/${product._id}
+=======
+      Link: ${window.location.origin}/products/${product._id}
+>>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
     `);
 
     let shareUrl = '';

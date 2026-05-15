@@ -77,7 +77,11 @@ const ReviewForm = ({ productId, serviceId, onReviewSubmitted }) => {
       }
       
       // Submit review to API
+<<<<<<< HEAD
       await apiService.createReview(reviewData);
+=======
+      await apiService.post('/api/reviews', reviewData);
+>>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
       
       Toast.success('Review submitted successfully!');
       
@@ -110,6 +114,7 @@ const ReviewForm = ({ productId, serviceId, onReviewSubmitted }) => {
       <div className="bg-card border border-border rounded-lg p-4 mb-6">
         <h2 className="font-semibold mb-4">Write a Review</h2>
         
+<<<<<<< HEAD
         {!isAuthenticated() && (
           <div className="mb-4 p-3 bg-warning/10 border border-warning/20 rounded-lg flex items-start gap-2">
             <Icon name="Info" size={18} className="text-warning mt-0.5" />
@@ -122,6 +127,8 @@ const ReviewForm = ({ productId, serviceId, onReviewSubmitted }) => {
           </div>
         )}
         
+=======
+>>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Rating selector */}
           <div>
