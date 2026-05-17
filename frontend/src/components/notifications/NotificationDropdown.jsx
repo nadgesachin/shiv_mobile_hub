@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '../../contexts/NotificationContext';
+import apiService from '../../services/api';
 import Icon from '../AppIcon';
 import Button from '../ui/Button';
 
 const NotificationDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
   
@@ -18,12 +20,23 @@ const NotificationDropdown = () => {
     loadNotifications 
   } = useNotifications();
   
-  // Load notifications when dropdown is opened
+  // Load unread message count
   useEffect(() => {
-    if (isOpen) {
-      loadNotifications();
-    }
-  }, [isOpen, loadNotifications]);
+    const loadMessageCount = async () => {
+      try {
+        const response = await apiService.request('/messages/unread/count');
+        setUnreadMessageCount(response.data.count || 0);
+      } catch (error) {
+        console.error('Error loading message count:', error);
+      }
+    };
+    
+    loadMessageCount();
+  }, []);
+  
+  const totalUnreadCount = unreadCount + unreadMessageCount;
+  
+  // No need to load notifications on dropdown open - already loaded in context
   
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -111,9 +124,9 @@ const NotificationDropdown = () => {
         className="relative"
       >
         <Icon name="Bell" size={18} />
-        {unreadCount > 0 && (
+        {totalUnreadCount > 0 && (
           <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs">
-            {unreadCount > 9 ? '9+' : unreadCount}
+            {totalUnreadCount > 9 ? '9+' : totalUnreadCount}
           </span>
         )}
       </Button>
@@ -123,8 +136,8 @@ const NotificationDropdown = () => {
         <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-card border border-border rounded-md shadow-lg z-50">
           {/* Header */}
           <div className="flex items-center justify-between p-3 border-b border-border">
-            <h3 className="font-medium">Notifications</h3>
-            {unreadCount > 0 && (
+            <h3 className="font-medium">Notifications {unreadMessageCount > 0 && `(${unreadMessageCount} messages)`}</h3>
+            {(unreadCount > 0 || unreadMessageCount > 0) && (
               <Button 
                 variant="ghost" 
                 size="sm" 

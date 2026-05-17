@@ -67,7 +67,22 @@ router.get('/', async (req, res) => {
     
     // Build filter
     const filter = { status: 'approved' };
-    
+
+    const isObjectId = (v) => mongoose.Types.ObjectId.isValid(v);
+    const invalidIdQuery =
+      (req.query.productId && !isObjectId(req.query.productId)) ||
+      (req.query.serviceId && !isObjectId(req.query.serviceId)) ||
+      (req.query.userId && !isObjectId(req.query.userId));
+
+    if (invalidIdQuery) {
+      return res.json({
+        success: true,
+        reviews: [],
+        pagination: { total: 0, page, limit, totalPages: 0, hasNextPage: false, hasPrevPage: false },
+        summary: { totalReviews: 0, ratings: {} }
+      });
+    }
+
     if (req.query.productId) {
       filter.productId = req.query.productId;
     }

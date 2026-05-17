@@ -20,22 +20,38 @@ const ChatPage = () => {
   const { user, isAdmin } = useAuth();
   const POLL_INTERVAL = 5000; // ms
 
-  // Load left-side conversations list (customers for admin)
+  // Load left-side conversations list (customers for admin, admin for normal users)
   useEffect(() => {
     const fetchConversations = async () => {
       try {
         setLoading(true);
 
-        const res = await apiService.request('/messages/conversations/list');
-        // Expect: { success: true, data: [ { userId, name, lastMessage, unreadCount, ... } ] }
-        if (res && res.success) {
-          const convs = res.data || [];
-          setConversations(convs);
-          if (convs.length > 0 && !activeConversation) {
-            setActiveConversation(convs[0]);
+        if (!isAdmin()) {
+          // For normal users, fetch admin user and set as only conversation
+          const adminRes = await apiService.request('/auth/admin-user');
+          if (adminRes && adminRes.success && adminRes.data) {
+            const adminUser = adminRes.data;
+            const adminConv = {
+              userId: adminUser._id,
+              name: adminUser.name || 'Admin Support',
+              lastMessage: null,
+              unreadCount: 0
+            };
+            setConversations([adminConv]);
+            setActiveConversation(adminConv);
           }
         } else {
-          setError('Failed to load conversations');
+          // For admin, fetch customer conversations
+          const res = await apiService.request('/messages/conversations/list');
+          if (res && res.success) {
+            const convs = res.data || [];
+            setConversations(convs);
+            if (convs.length > 0 && !activeConversation) {
+              setActiveConversation(convs[0]);
+            }
+          } else {
+            setError('Failed to load conversations');
+          }
         }
       } catch (err) {
         console.error('Error loading conversations:', err);
@@ -48,7 +64,7 @@ const ChatPage = () => {
     if (user?._id) {
       fetchConversations();
     }
-  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user?._id, isAdmin]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load messages for selected customer (right side)
   const fetchMessages = async (showLoading = true) => {
@@ -57,7 +73,7 @@ const ChatPage = () => {
       if (showLoading) setLoadingMessages(true);
 
       const userId = activeConversation.userId;
-      const res = await apiService.request(`/messages/conversations/${userId}`);
+      const res = await apiService.getAllMessages(userId);
       // Expect: { success: true, data: [ messages... ] }
       if (res && res.success) {
         setMessages(res.data || []);
@@ -216,9 +232,8 @@ const ChatPage = () => {
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
           <div className="flex h-[calc(100vh-200px)]">
-            {/* LEFT: Customers list */}
-            {isAdmin() && (
-              <div className="w-1/3 border-r border-border flex flex-col">
+            {/* LEFT: Conversations list (hidden for normal users on mobile) */}
+            <div className="w-1/3 border-r border-border flex flex-col hidden md:flex">
                 <div className="p-4 border-b border-border">
                   <h2 className="text-lg font-medium">
                     {isAdmin() ? 'Customers' : 'Conversations'}
@@ -295,9 +310,9 @@ const ChatPage = () => {
                   )}
                 </div>
               </div>
-            )}
+            
             {/* RIGHT: Chat area */}
-            <div className="w-2/3 flex flex-col">
+            <div className="flex-1 md:w-2/3 flex flex-col">
               {activeConversation ? (
                 <>
                   {/* Header */}

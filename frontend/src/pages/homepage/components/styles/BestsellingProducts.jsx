@@ -5,10 +5,37 @@ import Icon from '../../../../components/AppIcon';
 import Image from '../../../../components/AppImage';
 import MobileSwipe from '../../../../components/ui/animations/MobileSwipe';
 import useViewport from '../../../../hooks/useViewport';
+import ProductEnquiryModal from '../../../../components/products/ProductEnquiryModal';
+import ProductPreviewModal from '../../../../components/admin/ProductPreviewModal';
+import apiService from '../../../../services/api';
+import Toast from '../../../../components/ui/Toast';
 
 const BestsellingProducts = ({ section, products }) => {
   const viewport = useViewport();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [showEnquiryModal, setShowEnquiryModal] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewProduct, setPreviewProduct] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleProductClick = async (productId) => {
+    try {
+      setLoading(true);
+      const response = await apiService.request(`/products/${productId}`);
+      if (response.success && response.data) {
+        setPreviewProduct(response.data.product || response.data);
+        setShowPreviewModal(true);
+      } else {
+        Toast.error('Failed to load product details');
+      }
+    } catch (err) {
+      console.error('Error fetching product:', err);
+      Toast.error('Failed to load product details');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const formatPrice = (price) => {
     return `₹${price.toLocaleString('en-IN')}`;
@@ -36,23 +63,18 @@ const BestsellingProducts = ({ section, products }) => {
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
         >
-          {products.map((product, index) => (
+          {products.map((product, idx) => (
             <motion.div
               key={product.id}
-              className="w-56 flex-shrink-0 bg-white p-4 relative rounded-xl 
-               shadow-sm border border-gray-100 
-               hover:shadow-lg transition-all duration-300 group"
-              whileHover={{ y: -4 }}
-              whileTap={{ scale: 0.98 }}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, delay: idx * 0.1 }}
+              className="flex-shrink-0 w-[280px] sm:w-[320px] bg-white rounded-xl shadow-md overflow-hidden 
+                hover:shadow-xl transition-all"
             >
-              <Link to={`/products-catalog/${product.id}`} className="block">
-
+              <div onClick={() => handleProductClick(product._id || product.id)} className="cursor-pointer p-4">
                 {/* IMAGE */}
-                <div className="relative mb-3 flex items-center justify-center h-36 
-                      bg-gray-50 rounded-lg overflow-hidden">
+                <div className="relative aspect-square bg-gray-50 rounded-lg overflow-hidden mb-4">
                   <Image
                     src={product.image}
                     alt={product.title}
@@ -63,7 +85,7 @@ const BestsellingProducts = ({ section, products }) => {
                 </div>
 
                 {/* TITLE */}
-                <p className="text-sm font-medium text-gray-800 line-clamp-2 h-6 
+                <p className="text-sm font-semibold text-gray-800 line-clamp-2 mb-2 
                     group-hover:text-primary transition-colors">
                   {product.title}
                 </p>
@@ -103,18 +125,24 @@ const BestsellingProducts = ({ section, products }) => {
                   )}
                 </div>
 
-              </Link>
+              </div>
               {/* CONTACT TO BUY BUTTON */}
               <button
-                className="mt-3 w-full text-xs font-semibold text-white 
-                 bg-gradient-to-r from-primary to-secondary
-                 py-2 rounded-lg 
-                 hover:opacity-90 active:scale-95
-                 transition-all duration-200"
+                className="w-full bg-gradient-to-r from-orange-500 to-pink-500 text-white 
+                  py-2 rounded-lg font-medium hover:shadow-lg transition-all"
                 onClick={(e) => {
-                  e.preventDefault(); // stop Link navigation
+                  e.preventDefault();
                   e.stopPropagation();
-                  // add contact action here (modal / whatsapp / call)
+                  const productData = {
+                    _id: product._id || product.id,
+                    name: product.title || product.name,
+                    price: product.price,
+                    originalPrice: product.originalPrice,
+                    description: product.description,
+                    images: product.images || []
+                  };
+                  setSelectedProduct(productData);
+                  setShowEnquiryModal(true);
                 }}
               >
                 Contact to Buy
@@ -124,6 +152,37 @@ const BestsellingProducts = ({ section, products }) => {
 
         </motion.div>
       </MobileSwipe>
+
+      {/* Preview Modal */}
+      {showPreviewModal && previewProduct && (
+        <ProductPreviewModal
+          product={previewProduct}
+          onClose={() => {
+            setShowPreviewModal(false);
+            setPreviewProduct(null);
+          }}
+        />
+      )}
+
+      {/* Enquiry Modal */}
+      {showEnquiryModal && selectedProduct && (
+        <ProductEnquiryModal
+          product={selectedProduct}
+          onClose={() => {
+            setShowEnquiryModal(false);
+            setSelectedProduct(null);
+          }}
+        />
+      )}
+
+      {loading && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="text-gray-600 mt-4">Loading...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -2,7 +2,7 @@ import React from 'react';
 import Icon from '../AppIcon';
 import Button from '../ui/Button';
 
-const ServiceCard = ({ service, onEdit, onDelete, onToggleStatus, onTogglePopular }) => {
+const ServiceCard = ({ service, onEdit, onDelete, onToggleStatus, onTogglePopular, onShow }) => {
   const formatPrice = (price, priceType) => {
     if (priceType === 'free') return 'Free';
     if (priceType === 'variable') return 'Variable';
@@ -30,20 +30,20 @@ const ServiceCard = ({ service, onEdit, onDelete, onToggleStatus, onTogglePopula
   };
 
   return (
-    <div className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+    <div className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full">
       {/* Service Header */}
-      <div className="p-4 bg-muted/50">
+      <div className="p-4 bg-muted/50 flex-shrink-0">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
               <Icon name={service.icon} size={24} className="text-primary" />
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-foreground line-clamp-1 mb-1">
+              <h3 className="font-semibold text-foreground line-clamp-2 mb-1 min-h-[3rem]" title={service.name}>
                 {service.name}
               </h3>
-              <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${getCategoryColor(service.category)}`}>
-                {service.category.replace('-', ' ')}
+              <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${getCategoryColor(typeof service.category === 'object' ? service.category?.name : service.category)}`}>
+                {typeof service.category === 'object' ? service.category?.name : service.category?.replace('-', ' ')}
               </span>
             </div>
           </div>
@@ -68,9 +68,9 @@ const ServiceCard = ({ service, onEdit, onDelete, onToggleStatus, onTogglePopula
       </div>
 
       {/* Service Info */}
-      <div className="p-4">
+      <div className="p-4 flex-1 flex flex-col">
         {/* Description */}
-        <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
+        <p className="text-sm text-muted-foreground line-clamp-2 mb-4" title={service.description}>
           {service.description}
         </p>
 
@@ -154,53 +154,67 @@ const ServiceCard = ({ service, onEdit, onDelete, onToggleStatus, onTogglePopula
         )}
 
         {/* Actions */}
-        <div className="flex items-center gap-2 pt-3 border-t border-border">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onToggleStatus(service._id)}
-            className="flex-1"
-          >
-            <Icon 
-              name={service.isActive ? 'EyeOff' : 'Eye'} 
-              size={14} 
-              className="mr-1" 
-            />
-            {service.isActive ? 'Hide' : 'Show'}
-          </Button>
+        <div className="mt-auto pt-3 border-t border-border">
+          <div className="flex items-center gap-2 mb-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onShow}
+              className="flex-1"
+            >
+              <Icon name="Eye" size={14} className="mr-1" />
+              Show
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onEdit(service)}
+              className="flex-1"
+            >
+              <Icon name="Edit" size={14} className="mr-1" />
+              Edit
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onDelete(service._id)}
+              className="text-error hover:text-error hover:bg-error/10"
+            >
+              <Icon name="Trash2" size={14} />
+            </Button>
+          </div>
           
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onTogglePopular(service._id)}
-            className="flex-1"
-          >
-            <Icon 
-              name={service.isPopular ? 'StarOff' : 'Star'} 
-              size={14} 
-              className="mr-1" 
-            />
-            {service.isPopular ? 'Unpopular' : 'Popular'}
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onEdit(service)}
-            className="flex-1"
-          >
-            <Icon name="Edit" size={14} className="mr-1" />
-            Edit
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onDelete(service._id)}
-            className="text-error hover:text-error hover:bg-error/10"
-          >
-            <Icon name="Trash2" size={14} />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={service.isActive ? 'outline' : 'default'}
+              size="sm"
+              onClick={() => onToggleStatus(service._id)}
+              className="flex-1"
+            >
+              <Icon 
+                name={service.isActive ? 'EyeOff' : 'Eye'} 
+                size={14} 
+                className="mr-1" 
+              />
+              {service.isActive ? 'Deactivate' : 'Activate'}
+            </Button>
+            
+            <Button
+              variant={service.isPopular ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => onTogglePopular(service._id)}
+              className="flex-1"
+            >
+              <Icon 
+                name={service.isPopular ? 'Star' : 'StarOff'} 
+                size={14} 
+                className="mr-1" 
+              />
+              {service.isPopular ? 'Popular' : 'Mark Popular'}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

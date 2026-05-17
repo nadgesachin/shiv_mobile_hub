@@ -39,7 +39,7 @@ const CompactCategoryNav = () => {
   }, []);
 
   return (
-    <div className="mb-3 mt-[70px] pt-2"> {/* Account for fixed header height */}
+    <div className="mb-3"> {/* Account for fixed header height */}
       <div 
         ref={scrollRef}
         className="flex overflow-x-auto hide-scrollbar pb-2 px-3 gap-3 snap-x snap-mandatory"

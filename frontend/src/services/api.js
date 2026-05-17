@@ -1,8 +1,7 @@
 import CacheService from './cacheService';
 
-const API_BASE_URL = import.meta.env.VITE_ADSENSE_ID;
+const API_BASE_URL = import.meta.env.VITE_ADSENSE_ID || 'http://localhost:5000/api';
 console.log('API_BASE_URL:', API_BASE_URL);
-console.log(import.meta.env);
 
 class ApiService {
   constructor() {
@@ -647,6 +646,75 @@ class ApiService {
       method: 'POST',
       body: JSON.stringify(payload),
     });
+  }
+
+  async getReviewList(endpoint, options = {}) {
+    return this.request(endpoint, {
+      ...options,
+      method: 'GET',
+    });
+  }
+
+  // Review endpoints
+  async getReviews(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/reviews${queryString ? `?${queryString}` : ''}`);
+  }
+
+  async getReview(id) {
+    return this.request(`/reviews/${id}`);
+  }
+
+  async createReview(reviewData) {
+    return this.request('/reviews', {
+      method: 'POST',
+      body: JSON.stringify(reviewData),
+    });
+  }
+
+  async updateReview(id, reviewData) {
+    return this.request(`/reviews/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(reviewData),
+    });
+  }
+
+  async deleteReview(id) {
+    return this.request(`/reviews/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async addReviewReply(id, replyData) {
+    return this.request(`/reviews/${id}/reply`, {
+      method: 'POST',
+      body: JSON.stringify(replyData),
+    });
+  }
+
+  async markReviewHelpful(id) {
+    return this.request(`/reviews/${id}/helpful`, {
+      method: 'POST',
+    });
+  }
+
+  async getAllMessages(userId) {
+    return this.request(`/messages/conversations/${userId}`, {
+      method: 'GET',
+    });
+  }
+
+  // Public Banners
+  async getBanners(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return this.request(`/banners${query ? `?${query}` : ''}`, {
+      method: 'GET',
+    }, { useCache: true, cacheTime: 5 });
+  }
+
+  // Public Settings (site-wide config used by the homepage chrome)
+  async getPublicSettings() {
+    return this.request('/settings', { method: 'GET' }, { useCache: true, cacheTime: 10 });
   }
 
 }

@@ -1,10 +1,11 @@
 import React from 'react';
-import ProductEnquiryModal from '../../../components/products/ProductEnquiryModal';
-const ProductCard = ({ product, viewMode = 'grid', enquiryProduct }) => {
+import { Link } from 'react-router-dom';
+
+const ProductCard = ({ product, viewMode = 'grid' }) => {
 
   if (viewMode === 'list') {
     return (
-      <div className="flex items-center gap-4 bg-white border border-gray-100 
+      <Link to={`/products-catalog/${product._id || product.id}`} className="flex items-center gap-4 bg-white border border-gray-100 
                       rounded-lg p-3 hover:shadow-md transition-all">
 
         <div className="w-24 h-24 bg-gray-50 rounded-md flex items-center justify-center flex-shrink-0">
@@ -41,20 +42,17 @@ const ProductCard = ({ product, viewMode = 'grid', enquiryProduct }) => {
           </div>
         </div>
 
-        <button
-          className="px-4 py-2 text-xs font-semibold text-white 
+        <span className="px-4 py-2 text-xs font-semibold text-white 
                      bg-gradient-to-r from-primary to-secondary
-                     rounded-md hover:opacity-90"
-          onClick={() => enquiryProduct(product)}
-        >
-          Contact to Buy
-        </button>
-      </div>
+                     rounded-md">
+          View Details →
+        </span>
+      </Link>
     );
   }
 
   return (
-    <div className="w-56 bg-white rounded-xl border border-gray-100 
+    <Link to={`/products-catalog/${product._id || product.id}`} className="w-56 bg-white rounded-xl border border-gray-100 
                     shadow-sm hover:shadow-lg transition-all 
                     flex flex-col overflow-hidden">
 
@@ -89,16 +87,13 @@ const ProductCard = ({ product, viewMode = 'grid', enquiryProduct }) => {
           )}
         </div>
 
-        <button
-          className="mt-auto w-full text-xs font-semibold text-white 
+        <div className="mt-auto w-full text-xs font-semibold text-white 
                      bg-gradient-to-r from-primary to-secondary
-                     py-2 rounded-lg hover:opacity-90"
-          onClick={() => enquiryProduct(product)}
-        >
-          Contact to Buy
-        </button>
+                     py-2 rounded-lg hover:opacity-90 text-center">
+          View Details →
+        </div>
       </div>
-    </div>
+    </Link>
   );
 };
 

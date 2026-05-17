@@ -3,6 +3,38 @@ import apiService from '../../services/api';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
+import Toast from '../../components/ui/Toast';
+import { STYLE_CATALOG, resolveStyle } from '../homepage/components/sectionStyles';
+import StylePreview from '../homepage/components/sectionStyles/StylePreview';
+import SectionProductPicker from './SectionProductPicker';
+
+// Renders the visual mockup and description of the currently selected style.
+// Falls back to the closest new style when an existing section has a legacy value.
+const StylePreviewInline = ({ value, options }) => {
+  const resolved = resolveStyle(value);
+  const sel =
+    options?.find((o) => o.value === value) ||
+    options?.find((o) => o.value === resolved);
+  if (!sel) return null;
+  return (
+    <div className="flex flex-col sm:flex-row gap-3 mt-2">
+      <div className="sm:w-1/2">
+        <StylePreview style={sel.value} />
+      </div>
+      <div className="sm:w-1/2 text-xs text-muted-foreground flex items-start gap-2">
+        <Icon name={sel.icon || 'Info'} size={14} className="mt-0.5 flex-shrink-0" />
+        <span>
+          {sel.description}
+          {sel.suggestedMax && (
+            <div className="mt-1 text-foreground/70">
+              Recommended max products: <b>{sel.suggestedMax}</b>
+            </div>
+          )}
+        </span>
+      </div>
+    </div>
+  );
+};
 
 const SectionsManagement = () => {
   const [sections, setSections] = useState([]);
@@ -13,19 +45,18 @@ const SectionsManagement = () => {
   const [selectedSection, setSelectedSection] = useState(null);
   const [iconDropdownOpen, setIconDropdownOpen] = useState(false);
   const [iconSearch, setIconSearch] = useState('');
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, sectionId: null, sectionName: '' });
+  const [productPickerFor, setProductPickerFor] = useState(null);
 
-  // Style options for the section display
-  const styleOptions = [
-    { value: 'DailyDeals', label: 'Daily Deals' },
-    { value: 'TrendingProducts', label: 'Trending Products' },
-    { value: 'BestsellingProducts', label: 'Bestselling Products' },
-    { value: 'LowPriceProducts', label: 'Low Price Products' },
-    { value: 'LiveShopBanner', label: 'Live Shop Banner' },
-    { value: 'TopOffers', label: 'Top Offers' },
-    { value: 'BrandDhamaka', label: 'Brand Dhamaka' },
-    { value: 'ForYouProductSection', label: 'For You' },
-    { value: 'CategoryGrid', label: 'Category Grid' }
-  ];
+  // Style options are sourced from the renderer catalog so the dropdown
+  // automatically tracks new styles as they're added.
+  const styleOptions = STYLE_CATALOG.map((s) => ({
+    value: s.value,
+    label: s.label,
+    description: s.description,
+    icon: s.icon,
+    suggestedMax: s.suggestedMax,
+  }));
 
   const [formData, setFormData] = useState({
     name: '',
@@ -36,7 +67,7 @@ const SectionsManagement = () => {
     maxProducts: 10,
     isActive: true,
     displayOrder: 0,
-    style: 'DailyDeals', // Default style
+    style: 'MultiColumnGrid', // Default style
     settings: {
       showBadge: true,
       showRating: true,
@@ -105,7 +136,9 @@ const SectionsManagement = () => {
       setSections(response.data.sections || []);
       setError('');
     } catch (err) {
+      console.error('Error fetching sections:', err);
       setError(err.message || 'Failed to fetch sections');
+      Toast.error('Failed to load sections');
     } finally {
       setLoading(false);
     }
@@ -155,12 +188,15 @@ const SectionsManagement = () => {
     try {
       setLoading(true);
       await apiService.createAdminSection(formData);
+      Toast.success('Section created successfully!');
       await fetchSections();
       setIsFormOpen(false);
       resetForm();
       setError('');
     } catch (err) {
+      console.error('Error creating section:', err);
       setError(err.message || 'Failed to create section');
+      Toast.error('Failed to create section');
     } finally {
       setLoading(false);
     }
@@ -173,6 +209,7 @@ const SectionsManagement = () => {
     try {
       setLoading(true);
       await apiService.updateAdminSection(selectedSection._id, formData);
+      Toast.success('Section updated successfully!');
       await fetchSections();
       setIsFormOpen(false);
       resetForm();
@@ -180,7 +217,9 @@ const SectionsManagement = () => {
       setSelectedSection(null);
       setError('');
     } catch (err) {
+      console.error('Error updating section:', err);
       setError(err.message || 'Failed to update section');
+      Toast.error('Failed to update section');
     } finally {
       setLoading(false);
     }
@@ -188,18 +227,32 @@ const SectionsManagement = () => {
 
   // Handle section deletion
   const handleDeleteSection = async (id) => {
-    if (window.confirm('Are you sure you want to delete this section?')) {
-      try {
-        setLoading(true);
-        await apiService.deleteAdminSection(id);
-        await fetchSections();
-        setError('');
-      } catch (err) {
-        setError(err.message || 'Failed to delete section');
-      } finally {
-        setLoading(false);
-      }
+    const section = sections.find(s => s._id === id);
+    setDeleteModal({ isOpen: true, sectionId: id, sectionName: section?.title || section?.name || 'this section' });
+  };
+
+  // Confirm deletion
+  const confirmDelete = async () => {
+    try {
+      setLoading(true);
+      await apiService.deleteAdminSection(deleteModal.sectionId);
+      Toast.success('Section deleted successfully!');
+      await fetchSections();
+      setError('');
+      setDeleteModal({ isOpen: false, sectionId: null, sectionName: '' });
+    } catch (err) {
+      console.error('Error deleting section:', err);
+      setError(err.message || 'Failed to delete section');
+      Toast.error('Failed to delete section');
+      setDeleteModal({ isOpen: false, sectionId: null, sectionName: '' });
+    } finally {
+      setLoading(false);
     }
+  };
+
+  // Cancel deletion
+  const cancelDelete = () => {
+    setDeleteModal({ isOpen: false, sectionId: null, sectionName: '' });
   };
 
   // Open create form
@@ -210,29 +263,46 @@ const SectionsManagement = () => {
     setIsFormOpen(true);
   };
 
-  // Open edit form
-  const handleEditSection = (section) => {
-    setSelectedSection(section);
-    setFormData({
-      name: section.name,
-      icon: section.icon,
-      title: section.title,
-      subtitle: section.subtitle || '',
-      description: section.description || '',
-      maxProducts: section.maxProducts,
-      isActive: section.isActive,
-      displayOrder: section.displayOrder,
-      style: section.style || 'DailyDeals',
-      settings: {
-        showBadge: section.settings?.showBadge ?? true,
-        showRating: section.settings?.showRating ?? true,
-        showDiscount: section.settings?.showDiscount ?? true,
-        autoUpdate: section.settings?.autoUpdate ?? false,
-        updateCriteria: section.settings?.updateCriteria || 'newest'
+  // Open edit form - fetch fresh data from API
+  const handleEditSection = async (section) => {
+    try {
+      setLoading(true);
+      const response = await apiService.request(`/sections/${section._id}`);
+      
+      if (response.success && response.data) {
+        const fetchedSection = response.data;
+        setSelectedSection(fetchedSection);
+        setFormData({
+          name: fetchedSection.name,
+          icon: fetchedSection.icon,
+          title: fetchedSection.title,
+          subtitle: fetchedSection.subtitle || '',
+          description: fetchedSection.description || '',
+          maxProducts: fetchedSection.maxProducts,
+          isActive: fetchedSection.isActive,
+          displayOrder: fetchedSection.displayOrder,
+          style: fetchedSection.style || 'DailyDeals',
+          settings: {
+            showBadge: fetchedSection.settings?.showBadge ?? true,
+            showRating: fetchedSection.settings?.showRating ?? true,
+            showDiscount: fetchedSection.settings?.showDiscount ?? true,
+            autoUpdate: fetchedSection.settings?.autoUpdate ?? false,
+            updateCriteria: fetchedSection.settings?.updateCriteria || 'newest'
+          }
+        });
+        setIsEditing(true);
+        setIsFormOpen(true);
+      } else {
+        setError('Failed to fetch section details');
+        Toast.error('Failed to load section details');
       }
-    });
-    setIsEditing(true);
-    setIsFormOpen(true);
+    } catch (err) {
+      console.error('Error fetching section:', err);
+      setError(err.message || 'Failed to load section details');
+      Toast.error('Failed to load section details');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Close form
@@ -254,7 +324,7 @@ const SectionsManagement = () => {
       maxProducts: 10,
       isActive: true,
       displayOrder: 0,
-      style: 'DailyDeals',
+      style: 'MultiColumnGrid',
       settings: {
         showBadge: true,
         showRating: true,
@@ -355,7 +425,15 @@ const SectionsManagement = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => setProductPickerFor(section)}
+                  >
+                    <Icon name="Package" size={14} className="mr-1" />
+                    Manage products
+                  </Button>
                   <Button variant="outline" size="sm" onClick={() => handleEditSection(section)}>
                     <Icon name="Edit" size={14} className="mr-1" />
                     Edit
@@ -504,8 +582,13 @@ const SectionsManagement = () => {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium">Style</label>
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="block text-sm font-medium">
+                      Layout style
+                      <span className="ml-2 text-xs font-normal text-muted-foreground">
+                        — controls how this section is rendered on the homepage
+                      </span>
+                    </label>
                     <select
                       name="style"
                       value={formData.style}
@@ -518,6 +601,7 @@ const SectionsManagement = () => {
                         </option>
                       ))}
                     </select>
+                    <StylePreviewInline value={formData.style} options={styleOptions} />
                   </div>
 
                   <div className="space-y-2">
@@ -654,6 +738,51 @@ const SectionsManagement = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal.isOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="p-3 bg-error/10 rounded-full">
+                <Icon name="AlertTriangle" size={24} className="text-error" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-foreground mb-2">
+                  Delete Section?
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Are you sure you want to delete <span className="font-semibold text-foreground">{deleteModal.sectionName}</span>? This action cannot be undone.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 justify-end">
+              <Button
+                variant="outline"
+                onClick={cancelDelete}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="default"
+                onClick={confirmDelete}
+                className="bg-error hover:bg-error/90 text-white"
+              >
+                <Icon name="Trash2" size={16} className="mr-2" />
+                Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {productPickerFor && (
+        <SectionProductPicker
+          section={productPickerFor}
+          onClose={() => setProductPickerFor(null)}
+          onSaved={() => fetchSections()}
+        />
       )}
     </div>
   );

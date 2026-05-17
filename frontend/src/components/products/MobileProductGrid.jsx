@@ -120,7 +120,7 @@ const CompactProductCard = ({ product, onAddToCart }) => {
 };
 
 // Main product grid component
-const MobileProductGrid = ({ products, title, viewAllUrl, loading = false }) => {
+const MobileProductGrid = ({ products, title, viewAllUrl, loading = false, layout = 'grid' }) => {
   // Mock function for adding to cart
   const handleAddToCart = (productId) => {
     console.log(`Added product ${productId} to cart`);
@@ -135,9 +135,9 @@ const MobileProductGrid = ({ products, title, viewAllUrl, loading = false }) => 
           <div className="h-5 w-28 bg-gray-200 rounded animate-pulse"></div>
           <div className="h-4 w-16 bg-gray-200 rounded animate-pulse"></div>
         </div>
-        <div className="px-3 grid grid-cols-2 gap-2">
+        <div className={layout === 'horizontal' ? 'flex gap-2 overflow-x-auto hide-scrollbar px-3' : 'px-3 grid grid-cols-2 gap-2'}>
           {[...Array(4)].map((_, index) => (
-            <div key={index} className="rounded-lg overflow-hidden bg-white shadow-sm">
+            <div key={index} className={`rounded-lg overflow-hidden bg-white shadow-sm ${layout === 'horizontal' ? 'w-[160px] flex-shrink-0' : ''}`}>
               <div className="pt-[100%] relative bg-gray-200 animate-pulse"></div>
               <div className="p-2">
                 <div className="h-4 w-full bg-gray-200 rounded animate-pulse mb-2"></div>
@@ -160,13 +160,19 @@ const MobileProductGrid = ({ products, title, viewAllUrl, loading = false }) => 
         </Link>
       </div>
       
-      <div className="px-3 grid grid-cols-2 gap-2">
+      <div className={layout === 'horizontal' 
+        ? 'flex gap-3 overflow-x-auto hide-scrollbar px-3 pb-2 snap-x snap-mandatory' 
+        : 'px-3 grid grid-cols-2 gap-2'}>
         {products.map(product => (
-          <CompactProductCard 
+          <div 
             key={product._id} 
-            product={product} 
-            onAddToCart={handleAddToCart} 
-          />
+            className={layout === 'horizontal' ? 'w-[160px] flex-shrink-0 snap-start' : ''}
+          >
+            <CompactProductCard 
+              product={product} 
+              onAddToCart={handleAddToCart} 
+            />
+          </div>
         ))}
       </div>
     </div>

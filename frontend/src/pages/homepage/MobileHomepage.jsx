@@ -164,6 +164,7 @@ const MobileHomepage = () => {
             products={getProductsForSection(section.id)}
             viewAllUrl={`/products-catalog?section=${section.id}`}
             loading={false}
+            layout="horizontal"
           />
         </React.Fragment>
       ))}

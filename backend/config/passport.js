@@ -4,6 +4,11 @@ const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
 const User = require('../models/User');
 
+
+
+console.log('clientID',process.env.GOOGLE_CLIENT_ID)
+console.log('clientSecret',process.env.GOOGLE_CLIENT_SECRET)
+console.log('callbackURL',process.env.GOOGLE_CALLBACK_URL)
 // Google OAuth Strategy
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,

@@ -312,7 +312,7 @@ const ServicesHub = () => {
                 <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredServices?.map((service) => (
                     <ServiceCard
-                      key={service?.id}
+                      key={service?._id || service?.id}
                       service={service}
                       viewMode="grid"
                     />
@@ -322,7 +322,7 @@ const ServicesHub = () => {
                 <div className="flex flex-col gap-4">
                   {filteredServices?.map((service) => (
                     <ServiceCard
-                      key={service?.id}
+                      key={service?._id || service?.id}
                       service={service}
                       viewMode="list"
                     />

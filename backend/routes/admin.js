@@ -241,34 +241,37 @@ router.delete('/sections/:id', async (req, res) => {
   }
 });
 
+// Both directions are kept in sync: Section.products[] and Product.sections[]
+// are mirrors of the same many-to-many. Either side can be queried.
 router.put('/sections/:id/add-product', async (req, res) => {
   try {
     const { productId } = req.body;
     if (!mongoose.Types.ObjectId.isValid(productId)) {
       return res.status(400).json({ success: false, message: 'Invalid product ID' });
     }
-    
+
     const section = await Section.findById(req.params.id);
     if (!section) {
       return res.status(404).json({ success: false, message: 'Section not found' });
     }
-    
-    // Check if the product exists
+
     const product = await Product.findById(productId);
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
-    
-    // Check if product is already in the section
-    if (section.products.includes(productId)) {
-      return res.status(400).json({ success: false, message: 'Product already in section' });
-    }
-    
-    // Add product to section
-    section.products.push(productId);
-    await section.save();
-    
-    res.json({ success: true, data: section });
+
+    // Atomic upserts on both sides — bypasses full-doc validation so legacy
+    // products with corrupted unrelated fields can still be linked.
+    await Section.updateOne(
+      { _id: section._id },
+      { $addToSet: { products: product._id } }
+    );
+    await Product.updateOne(
+      { _id: product._id },
+      { $addToSet: { sections: section._id } }
+    );
+
+    res.json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -280,19 +283,22 @@ router.put('/sections/:id/remove-product', async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(productId)) {
       return res.status(400).json({ success: false, message: 'Invalid product ID' });
     }
-    
+
     const section = await Section.findById(req.params.id);
     if (!section) {
       return res.status(404).json({ success: false, message: 'Section not found' });
     }
-    
-    // Remove product from section
-    section.products = section.products.filter(
-      product => product.toString() !== productId
+
+    await Section.updateOne(
+      { _id: section._id },
+      { $pull: { products: productId } }
     );
-    await section.save();
-    
-    res.json({ success: true, data: section });
+    await Product.updateOne(
+      { _id: productId },
+      { $pull: { sections: section._id } }
+    );
+
+    res.json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

@@ -3,8 +3,10 @@ import apiService from '../../services/api';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
+import Toast from '../../components/ui/Toast';
 import ProductForm from '../../components/admin/ProductForm';
 import ProductCard from '../../components/admin/ProductCard';
+import ProductPreviewModal from '../../components/admin/ProductPreviewModal';
 
 const ProductsManagement = () => {
   const [products, setProducts] = useState([]);
@@ -17,8 +19,11 @@ const ProductsManagement = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [categories, setCategories] = useState([]);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, productId: null, productName: '' });
+  const [previewProduct, setPreviewProduct] = useState(null);
   const [pagination, setPagination] = useState({
     current: 1,
+    page: 1,
     pages: 1,
     total: 0,
     limit: 20
@@ -43,6 +48,7 @@ const ProductsManagement = () => {
         localStorage.setItem('categories-product', JSON.stringify(response.data));
       }
     } catch (err) {
+      console.error('Error fetching categories:', err);
       setError(err.message || 'Failed to fetch categories');
     }
   };
@@ -52,17 +58,19 @@ const ProductsManagement = () => {
     try {
       setLoading(true);
       const response = await apiService.getProducts({
-        page: pagination.current,
+        page: params.page || pagination.page || 1,
         limit: pagination.limit,
         ...params
       });
       
       setProducts(response.data.products);
       setFilteredProducts(response.data.products);
-      setPagination(response.data.pagination);
+      setPagination({ ...response.data.pagination, current: response.data.pagination.page });
       setError('');
     } catch (err) {
+      console.error('Error fetching products:', err);
       setError(err.message || 'Failed to fetch products');
+      Toast.error('Failed to load products');
     } finally {
       setLoading(false);
     }
@@ -92,15 +100,23 @@ const ProductsManagement = () => {
     setFilteredProducts(filtered);
   }, [products, searchTerm, selectedCategory]);
 
-  // Handle product creation
-  const handleCreateProduct = async (productData) => {
+  const handleSubmit = async (formData) => {
     try {
-      await apiService.createProduct(productData);
+      if (isEditing && selectedProduct) {
+        await apiService.updateProduct(selectedProduct._id, formData);
+        Toast.success('Product updated successfully!');
+      } else {
+        await apiService.createProduct(formData);
+        Toast.success('Product created successfully!');
+      }
       await fetchProducts();
-      setIsFormOpen(false);
+      handleCloseForm();
       setError('');
     } catch (err) {
-      setError(err.message || 'Failed to create product');
+      console.error('Error saving product:', err);
+      setError(err.message || 'Failed to save product');
+      Toast.error(err.message || 'Failed to save product');
+      throw err;
     }
   };
 
@@ -116,41 +132,74 @@ const ProductsManagement = () => {
       setSelectedProduct(null);
       setIsEditing(false);
       setError('');
+      Toast.success('Product updated successfully!');
     } catch (err) {
       console.error('Failed to update product:', err);
       setError(err.message || 'Failed to update product');
+      Toast.error('Failed to update product');
     }
   };
 
   // Handle product deletion
   const handleDeleteProduct = async (id) => {
-    if (window.confirm('Are you sure you want to delete this product?')) {
-      try {
-        await apiService.deleteProduct(id);
-        await fetchProducts();
-        setError('');
-      } catch (err) {
-        setError(err.message || 'Failed to delete product');
-      }
+    const product = products.find(p => p._id === id);
+    setDeleteModal({ isOpen: true, productId: id, productName: product?.name || 'this product' });
+  };
+
+  // Confirm deletion
+  const confirmDelete = async () => {
+    try {
+      await apiService.deleteProduct(deleteModal.productId);
+      Toast.success('Product deleted successfully!');
+      await fetchProducts({ page: pagination.page });
+      setError('');
+      setDeleteModal({ isOpen: false, productId: null, productName: '' });
+    } catch (err) {
+      setError(err.message || 'Failed to delete product');
+      Toast.error('Failed to delete product');
     }
+  };
+
+  // Cancel deletion
+  const cancelDelete = () => {
+    setDeleteModal({ isOpen: false, productId: null, productName: '' });
   };
 
   // Handle product status toggle
   const handleToggleStatus = async (id) => {
     try {
       await apiService.toggleProductStatus(id);
+      Toast.success('Product status updated!');
       await fetchProducts();
       setError('');
     } catch (err) {
+      console.error('Error toggling status:', err);
       setError(err.message || 'Failed to toggle product status');
+      Toast.error('Failed to update status');
     }
   };
 
-  // Open edit form
-  const handleEditProduct = (product) => {
-    setSelectedProduct(product);
-    setIsEditing(true);
-    setIsFormOpen(true);
+  // Open edit form - fetch fresh data from API
+  const handleEditProduct = async (product) => {
+    try {
+      setLoading(true);
+      const response = await apiService.request(`/products/${product._id}`);
+      
+      if (response.success && response.data) {
+        setSelectedProduct(response.data?.product);
+        setIsEditing(true);
+        setIsFormOpen(true);
+      } else {
+        setError('Failed to fetch product details');
+        Toast.error('Failed to load product details');
+      }
+    } catch (err) {
+      console.error('Error fetching product:', err);
+      setError(err.message || 'Failed to load product details');
+      Toast.error('Failed to load product details');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Open create form
@@ -169,8 +218,18 @@ const ProductsManagement = () => {
 
   // Handle pagination
   const handlePageChange = (page) => {
-    setPagination(prev => ({ ...prev, current: page }));
+    setPagination(prev => ({ ...prev, page: page, current: page }));
     fetchProducts({ page });
+  };
+
+  // Handle show product preview
+  const handleShowProduct = (product) => {
+    setPreviewProduct(product);
+  };
+
+  // Close preview modal
+  const handleClosePreview = () => {
+    setPreviewProduct(null);
   };
 
   // Handle clear filter
@@ -282,6 +341,7 @@ const ProductsManagement = () => {
             <ProductCard
               key={product._id}
               product={product}
+              onShow={() => handleShowProduct(product)}
               onEdit={() => handleEditProduct(product)}
               onDelete={() => handleDeleteProduct(product._id)}
               onToggleStatus={() => handleToggleStatus(product._id)}
@@ -294,27 +354,27 @@ const ProductsManagement = () => {
       {pagination.pages > 1 && (
         <div className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
-            Showing {((pagination.current - 1) * pagination.limit) + 1} to{' '}
-            {Math.min(pagination.current * pagination.limit, pagination.total)} of{' '}
+            Showing {pagination.total > 0 ? ((pagination.page - 1) * pagination.limit) + 1 : 0} to{' '}
+            {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
             {pagination.total} products
           </div>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
-              disabled={pagination.current === 1}
-              onClick={() => handlePageChange(pagination.current - 1)}
+              disabled={pagination.page === 1 || loading}
+              onClick={() => handlePageChange(pagination.page - 1)}
             >
               Previous
             </Button>
             <span className="px-3 py-1 text-sm">
-              Page {pagination.current} of {pagination.pages}
+              Page {pagination.page} of {pagination.pages}
             </span>
             <Button
               variant="outline"
               size="sm"
-              disabled={pagination.current === pagination.pages}
-              onClick={() => handlePageChange(pagination.current + 1)}
+              disabled={pagination.page >= pagination.pages || loading}
+              onClick={() => handlePageChange(pagination.page + 1)}
             >
               Next
             </Button>
@@ -329,6 +389,51 @@ const ProductsManagement = () => {
           isEditing={isEditing}
           onSubmit={isEditing ? handleUpdateProduct : handleCreateProduct}
           onClose={handleCloseForm}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal.isOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="p-3 bg-error/10 rounded-full">
+                <Icon name="AlertTriangle" size={24} className="text-error" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-foreground mb-2">
+                  Delete Product?
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Are you sure you want to delete <span className="font-semibold text-foreground">{deleteModal.productName}</span>? This action cannot be undone.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 justify-end">
+              <Button
+                variant="outline"
+                onClick={cancelDelete}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="default"
+                onClick={confirmDelete}
+                className="bg-error hover:bg-error/90 text-white"
+              >
+                <Icon name="Trash2" size={16} className="mr-2" />
+                Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Product Preview Modal */}
+      {previewProduct && (
+        <ProductPreviewModal
+          product={previewProduct}
+          onClose={handleClosePreview}
         />
       )}
     </div>

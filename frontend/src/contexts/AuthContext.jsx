@@ -130,14 +130,34 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Login function
-  const login = async (email, password, role = 'user') => {
+  const login = async (emailOrUser, passwordOrToken, role = 'user') => {
+    // Case 1: Google Login (user object and token are passed directly)
+    if (typeof emailOrUser === 'object' && passwordOrToken) {
+      const user = emailOrUser;
+      const token = passwordOrToken;
+
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      apiService.setToken(token);
+
+      dispatch({
+        type: AUTH_ACTIONS.LOGIN_SUCCESS,
+        payload: { user, token },
+      });
+      return { success: true, user };
+    }
+
+    // Case 2: Normal Email/Password Login
+    const email = emailOrUser;
+    const password = passwordOrToken;
     try {
       dispatch({ type: AUTH_ACTIONS.LOGIN_START });
       const response = await apiService.login(email, password, role);
       
       const { user, token } = response.data;
       
-      // Set token in API service
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
       apiService.setToken(token);
       
       dispatch({
@@ -184,6 +204,7 @@ export const AuthProvider = ({ children }) => {
   // Logout function
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     apiService.setToken(null);
     dispatch({ type: AUTH_ACTIONS.LOGOUT });
   };
@@ -200,6 +221,14 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       return { success: false, error: error.message };
     }
+  };
+
+  // Update user (local state only, no API call)
+  const updateUser = (userData) => {
+    dispatch({
+      type: AUTH_ACTIONS.UPDATE_PROFILE_SUCCESS,
+      payload: { user: userData },
+    });
   };
 
   // Clear error function
@@ -223,6 +252,7 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     updateProfile,
+    updateUser,
     clearError,
     isAdmin,
     isAuthenticated,

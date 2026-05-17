@@ -6,11 +6,77 @@ import Image from '../../../../components/AppImage';
 import { Interactive } from '../../../../components/ui/animations';
 import MobileSwipe from '../../../../components/ui/animations/MobileSwipe';
 import useViewport from '../../../../hooks/useViewport';
+import ProductEnquiryModal from '../../../../components/products/ProductEnquiryModal';
+import ProductPreviewModal from '../../../../components/admin/ProductPreviewModal';
+import apiService from '../../../../services/api';
+import Toast from '../../../../components/ui/Toast';
+import { ProductBadges } from '../../../../components/products/ProductBadge';
 
 const ProductCarousel = ({ section, products }) => {
   const viewport = useViewport();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [showEnquiryModal, setShowEnquiryModal] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewProduct, setPreviewProduct] = useState(null);
+  const [loading, setLoading] = useState(false);
   const sectionRef = useRef(null);
+
+  // Get badges for a product
+  const getProductBadges = (product) => {
+    const badges = [];
+    
+    // Discount badge
+    if (product.originalPrice && product.originalPrice > product.price) {
+      const discount = calculateDiscount(product.originalPrice, product.price);
+      badges.push({ type: 'discount', text: `${discount}% OFF` });
+    }
+    
+    // Check if product is new (created in last 7 days)
+    if (product.createdAt) {
+      const daysSinceCreation = Math.floor((Date.now() - new Date(product.createdAt).getTime()) / (1000 * 60 * 60 * 24));
+      if (daysSinceCreation <= 7) {
+        badges.push({ type: 'new' });
+      }
+    }
+    
+    // Bestseller badge based on sales
+    if (product.salesCount && product.salesCount > 100) {
+      badges.push({ type: 'bestseller' });
+    }
+    
+    // Limited stock badge
+    if (product.stock && product.stock < 10 && product.stock > 0) {
+      badges.push({ type: 'limited', text: `Only ${product.stock} left` });
+    }
+    
+    // Custom badge from product
+    if (product.badgeText) {
+      badges.push({ type: 'featured', text: product.badgeText });
+    }
+    
+    return badges.slice(0, 2); // Show max 2 badges
+  };
+
+  // Fetch product details for preview
+  const handleProductClick = async (productId) => {
+    try {
+      setLoading(true);
+      const response = await apiService.request(`/products/${productId}`);
+      
+      if (response.success && response.data) {
+        setPreviewProduct(response.data.product || response.data);
+        setShowPreviewModal(true);
+      } else {
+        Toast.error('Failed to load product details');
+      }
+    } catch (err) {
+      console.error('Error fetching product:', err);
+      Toast.error('Failed to load product details');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCarouselNavigation = (directionOrIndex) => {
     let newIndex;
@@ -121,11 +187,13 @@ const ProductCarousel = ({ section, products }) => {
               className="flex-none w-[280px] sm:w-[320px] group"
             >
               <Interactive>
-                <div className="card-premium h-full flex flex-col relative overflow-hidden rounded-2xl border border-gray-100 bg-white hover:shadow-xl transition-all duration-300">
+                <div 
+                  onClick={() => handleProductClick(product._id || product.id)}
+                  className="card-premium h-full flex flex-col relative overflow-hidden rounded-2xl border border-gray-100 bg-white hover:shadow-xl transition-all duration-300 cursor-pointer"
+                >
 
                   {/* IMAGE */}
-                  <Link to={`/products-catalog/${product.id}`}>
-                    <div className="relative aspect-square bg-gray-50 overflow-hidden">
+                  <div className="relative aspect-square bg-gray-50 overflow-hidden">
                       <Image
                         src={product.image}
                         alt={product.title}
@@ -137,24 +205,9 @@ const ProductCarousel = ({ section, products }) => {
                       <div className="absolute inset-0 bg-black/10 opacity-0 
                             group-hover:opacity-100 transition-opacity duration-300" />
 
-                      {/* BADGES */}
-                      <div className="absolute top-3 left-3 right-3 flex justify-between">
-                        {product.originalPrice > product.price && (
-                          <span className="px-3 py-1 text-[11px] font-bold rounded-full 
-                                 bg-emerald-100 text-emerald-700">
-                            {calculateDiscount(product.originalPrice, product.price)}% OFF
-                          </span>
-                        )}
-
-                        {product.badgeText && (
-                          <span className="px-3 py-1 text-[11px] font-bold rounded-full 
-                                 bg-gradient-to-r from-primary to-secondary text-white">
-                            {product.badgeText}
-                          </span>
-                        )}
-                      </div>
+                      {/* Dynamic Product Badges */}
+                      <ProductBadges badges={getProductBadges(product)} position="top-left" />
                     </div>
-                  </Link>
 
                   {/* CONTENT */}
                   <div className="p-5 flex flex-col flex-1">
@@ -202,7 +255,17 @@ const ProductCarousel = ({ section, products }) => {
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        // contact logic (modal / whatsapp / call)
+                        // Transform product data to match modal expectations
+                        const productData = {
+                          _id: product._id || product.id,
+                          name: product.title || product.name,
+                          price: product.price,
+                          originalPrice: product.originalPrice,
+                          description: product.description,
+                          images: product.images || []
+                        };
+                        setSelectedProduct(productData);
+                        setShowEnquiryModal(true);
                       }}
                     >
                       Contact to Buy
@@ -216,6 +279,38 @@ const ProductCarousel = ({ section, products }) => {
 
         </div>
       </MobileSwipe>
+      
+      {/* Preview Modal */}
+      {showPreviewModal && previewProduct && (
+        <ProductPreviewModal
+          product={previewProduct}
+          onClose={() => {
+            setShowPreviewModal(false);
+            setPreviewProduct(null);
+          }}
+        />
+      )}
+
+      {/* Enquiry Modal */}
+      {showEnquiryModal && selectedProduct && (
+        <ProductEnquiryModal
+          product={selectedProduct}
+          onClose={() => {
+            setShowEnquiryModal(false);
+            setSelectedProduct(null);
+          }}
+        />
+      )}
+
+      {/* Loading Overlay */}
+      {loading && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="text-gray-600 mt-4">Loading product...</p>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 };

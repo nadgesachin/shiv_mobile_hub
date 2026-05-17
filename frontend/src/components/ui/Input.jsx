@@ -9,6 +9,12 @@ const Input = React.forwardRef(({
     error,
     required = false,
     id,
+    // Strip custom props so they don't leak as DOM attributes on <input>
+    iconName,
+    iconPosition,
+    iconSize,
+    leftIcon,
+    rightIcon,
     ...props
 }, ref) => {
     // Generate unique ID if not provided

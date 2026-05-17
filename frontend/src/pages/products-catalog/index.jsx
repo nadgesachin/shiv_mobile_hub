@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import apiService from '../../services/api';
 import Header from '../../components/ui/Header';
 import Footer from '../../components/ui/Footer';
@@ -12,7 +13,18 @@ import ComparisonModal from './components/ComparisonModal';
 import BulkOrderSection from './components/BulkOrderSection';
 
 const ProductsCatalog = () => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [urlParams, setUrlParams] = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(urlParams.get('search') || '');
+
+  // Keep state in sync if a different /products-catalog?search=... link is clicked
+  // while we're already on the page (e.g. from the 404 page or homepage).
+  useEffect(() => {
+    const fromUrl = urlParams.get('search') || '';
+    if (fromUrl !== searchQuery) setSearchQuery(fromUrl);
+    const cat = urlParams.get('category');
+    if (cat) setCurrentCategory(cat);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlParams]);
   const [sortBy, setSortBy] = useState('featured');
   const [viewMode, setViewMode] = useState('grid');
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -326,7 +338,7 @@ const ProductsCatalog = () => {
             <div className={`grid gap-4 sm:gap-5 lg:gap-6 ${viewMode === 'grid' ? 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' : 'grid-cols-1'}`}
             >
               {filteredProducts.map((product) => (
-                <div key={product?.id} className="relative group animate-fadeInUp">
+                <div key={product?._id || product?.id} className="relative group animate-fadeInUp">
                   <ProductCard
                     product={product}
                     viewMode={viewMode}   // ✅ THIS IS THE FIX

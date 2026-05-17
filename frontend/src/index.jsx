@@ -5,6 +5,7 @@ import "./styles/tailwind.css";
 import "./styles/index.css";
 import "./styles/mobile.css";
 import "./styles/premium.css";
+import "./styles/modern-effects.css";
 
 const container = document.getElementById("root");
 const root = createRoot(container);

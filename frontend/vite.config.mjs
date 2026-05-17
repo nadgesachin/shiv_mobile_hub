@@ -5,11 +5,25 @@ import tagger from "@dhiwise/component-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  // This changes the out put dir from dist to build
-  // comment this out if that isn't relevant for your project
   build: {
     outDir: "build",
-    chunkSizeWarningLimit: 2000,
+    chunkSizeWarningLimit: 1200,
+    rollupOptions: {
+      output: {
+        // Split heavy third-party libs into their own chunks so the main
+        // bundle stays small and the browser caches each lib independently.
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'motion': ['framer-motion'],
+          'charts': ['recharts', 'd3'],
+          'icons': ['lucide-react', 'react-icons'],
+          'forms': ['react-hook-form'],
+          'helmet': ['react-helmet', 'react-helmet-async'],
+          'utils': ['date-fns', 'axios', 'clsx', 'class-variance-authority', 'tailwind-merge'],
+          'socket': ['socket.io-client'],
+        },
+      },
+    },
   },
   plugins: [tsconfigPaths(), react(), tagger()],
   server: {

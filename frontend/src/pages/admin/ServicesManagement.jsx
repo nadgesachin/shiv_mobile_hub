@@ -3,8 +3,10 @@ import apiService from '../../services/api';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
+import Toast from '../../components/ui/Toast';
 import ServiceForm from '../../components/admin/ServiceForm';
 import ServiceCard from '../../components/admin/ServiceCard';
+import ServicePreviewModal from '../../components/admin/ServicePreviewModal';
 
 const ServicesManagement = () => {
   const [services, setServices] = useState([]);
@@ -16,6 +18,8 @@ const ServicesManagement = () => {
   const [selectedService, setSelectedService] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, serviceId: null, serviceName: '' });
+  const [previewService, setPreviewService] = useState(null);
 
   const categories = [
     { id: 'all', name: 'All Categories' },
@@ -34,7 +38,9 @@ const ServicesManagement = () => {
       setFilteredServices(response.data.services);
       setError('');
     } catch (err) {
+      console.error('Error fetching services:', err);
       setError(err.message || 'Failed to fetch services');
+      Toast.error('Failed to load services');
     } finally {
       setLoading(false);
     }
@@ -64,14 +70,23 @@ const ServicesManagement = () => {
   }, [services, searchTerm, selectedCategory]);
 
   // Handle service creation
-  const handleCreateService = async (serviceData) => {
+  const handleSubmit = async (formData) => {
     try {
-      await apiService.createService(serviceData);
+      if (isEditing && selectedService) {
+        await apiService.updateService(selectedService._id, formData);
+        Toast.success('Service updated successfully!');
+      } else {
+        await apiService.createService(formData);
+        Toast.success('Service created successfully!');
+      }
       await fetchServices();
-      setIsFormOpen(false);
+      handleCloseForm();
       setError('');
     } catch (err) {
-      setError(err.message || 'Failed to create service');
+      console.error('Error saving service:', err);
+      setError(err.message || 'Failed to save service');
+      Toast.error(err.message || 'Failed to save service');
+      throw err;
     }
   };
 
@@ -79,6 +94,7 @@ const ServicesManagement = () => {
   const handleUpdateService = async (id, serviceData) => {
     try {
       await apiService.updateService(id, serviceData);
+      Toast.success('Service updated successfully!');
       await fetchServices();
       setIsFormOpen(false);
       setSelectedService(null);
@@ -86,30 +102,47 @@ const ServicesManagement = () => {
       setError('');
     } catch (err) {
       setError(err.message || 'Failed to update service');
+      Toast.error('Failed to update service');
     }
   };
 
   // Handle service deletion
   const handleDeleteService = async (id) => {
-    if (window.confirm('Are you sure you want to delete this service?')) {
-      try {
-        await apiService.deleteService(id);
-        await fetchServices();
-        setError('');
-      } catch (err) {
-        setError(err.message || 'Failed to delete service');
-      }
+    const service = services.find(s => s._id === id);
+    setDeleteModal({ isOpen: true, serviceId: id, serviceName: service?.name || 'this service' });
+  };
+
+  // Confirm deletion
+  const confirmDelete = async () => {
+    try {
+      await apiService.deleteService(deleteModal.serviceId);
+      Toast.success('Service deleted successfully!');
+      await fetchServices();
+      setDeleteModal({ isOpen: false, serviceId: null, serviceName: '' });
+      setError('');
+    } catch (err) {
+      console.error('Error deleting service:', err);
+      setError(err.message || 'Failed to delete service');
+      Toast.error('Failed to delete service');
     }
+  };
+
+  // Cancel deletion
+  const cancelDelete = () => {
+    setDeleteModal({ isOpen: false, serviceId: null, serviceName: '' });
   };
 
   // Handle service status toggle
   const handleToggleStatus = async (id) => {
     try {
       await apiService.toggleServiceStatus(id);
+      Toast.success('Service status updated!');
       await fetchServices();
       setError('');
     } catch (err) {
+      console.error('Error toggling status:', err);
       setError(err.message || 'Failed to toggle service status');
+      Toast.error('Failed to update status');
     }
   };
 
@@ -117,18 +150,37 @@ const ServicesManagement = () => {
   const handleTogglePopular = async (id) => {
     try {
       await apiService.toggleServicePopular(id);
+      Toast.success('Service popular status updated!');
       await fetchServices();
       setError('');
     } catch (err) {
+      console.error('Error toggling popular:', err);
       setError(err.message || 'Failed to toggle popular status');
+      Toast.error('Failed to update popular status');
     }
   };
 
-  // Open edit form
-  const handleEditService = (service) => {
-    setSelectedService(service);
-    setIsEditing(true);
-    setIsFormOpen(true);
+  // Open edit form - fetch fresh data from API
+  const handleEditService = async (service) => {
+    try {
+      setLoading(true);
+      const response = await apiService.request(`/services/${service._id}`);
+      
+      if (response.success && response.data) {
+        setSelectedService(response.data);
+        setIsEditing(true);
+        setIsFormOpen(true);
+      } else {
+        setError('Failed to fetch service details');
+        Toast.error('Failed to load service details');
+      }
+    } catch (err) {
+      console.error('Error fetching service:', err);
+      setError(err.message || 'Failed to load service details');
+      Toast.error('Failed to load service details');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Open create form
@@ -143,6 +195,16 @@ const ServicesManagement = () => {
     setIsFormOpen(false);
     setSelectedService(null);
     setIsEditing(false);
+  };
+
+  // Handle show service preview
+  const handleShowService = (service) => {
+    setPreviewService(service);
+  };
+
+  // Close preview modal
+  const handleClosePreview = () => {
+    setPreviewService(null);
   };
 
   if (loading && services.length === 0) {
@@ -242,6 +304,7 @@ const ServicesManagement = () => {
             <ServiceCard
               key={service._id}
               service={service}
+              onShow={() => handleShowService(service)}
               onEdit={() => handleEditService(service)}
               onDelete={() => handleDeleteService(service._id)}
               onToggleStatus={() => handleToggleStatus(service._id)}
@@ -258,6 +321,51 @@ const ServicesManagement = () => {
           isEditing={isEditing}
           onSubmit={isEditing ? handleUpdateService : handleCreateService}
           onClose={handleCloseForm}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal.isOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="p-3 bg-error/10 rounded-full">
+                <Icon name="AlertTriangle" size={24} className="text-error" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-foreground mb-2">
+                  Delete Service?
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Are you sure you want to delete <span className="font-semibold text-foreground">{deleteModal.serviceName}</span>? This action cannot be undone.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 justify-end">
+              <Button
+                variant="outline"
+                onClick={cancelDelete}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="default"
+                onClick={confirmDelete}
+                className="bg-error hover:bg-error/90 text-white"
+              >
+                <Icon name="Trash2" size={16} className="mr-2" />
+                Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Service Preview Modal */}
+      {previewService && (
+        <ServicePreviewModal
+          service={previewService}
+          onClose={handleClosePreview}
         />
       )}
     </div>

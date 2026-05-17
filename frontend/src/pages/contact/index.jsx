@@ -4,9 +4,8 @@ import Footer from '../../components/ui/Footer';
 import ContactHero from './components/ContactHero';
 import QuickContactCards from './components/QuickContactCards';
 import ContactForm from './components/ContactForm';
-import ServiceAreaMap from './components/ServiceAreaMap';
+import ShopLocation from './components/ShopLocation';
 import FAQSection from './components/FAQSection';
-import CommunityEvents from './components/CommunityEvents';
 import SocialMediaFeed from './components/SocialMediaFeed';
 
 const Contact = () => {
@@ -22,9 +21,8 @@ const Contact = () => {
         <ContactHero />
         <QuickContactCards />
         <ContactForm />
-        <ServiceAreaMap />
+        <ShopLocation />
         <FAQSection />
-        {/* <CommunityEvents /> */}
         <SocialMediaFeed />
       </main>
 

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
+import Toast from '../../../components/ui/Toast';
+import apiService from '../../../services/api';
 
 const ContactForm = () => {
   const [formData, setFormData] = useState({
@@ -61,27 +63,40 @@ const ContactForm = () => {
     return Object.keys(newErrors)?.length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e?.preventDefault();
     
     if (!validateForm()) return;
 
     setIsSubmitting(true);
     
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSubmitSuccess(true);
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        subject: '',
-        category: '',
-        message: ''
+    try {
+      const response = await apiService.request('/contact/send', {
+        method: 'POST',
+        data: formData
       });
-      
-      setTimeout(() => setSubmitSuccess(false), 5000);
-    }, 2000);
+
+      if (response.success) {
+        setSubmitSuccess(true);
+        Toast.success('Message sent successfully! We\'ll get back to you soon.');
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          subject: '',
+          category: '',
+          message: ''
+        });
+        setTimeout(() => setSubmitSuccess(false), 5000);
+      } else {
+        Toast.error(response.message || 'Failed to send message. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      Toast.error('Failed to send message. Please try again later.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

@@ -2,7 +2,7 @@ import React from 'react';
 import Icon from '../AppIcon';
 import Button from '../ui/Button';
 
-const ProductCard = ({ product, onEdit, onDelete, onToggleStatus }) => {
+const ProductCard = ({ product, onEdit, onDelete, onToggleStatus, onShow }) => {
   const formatPrice = (price) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -38,9 +38,9 @@ const ProductCard = ({ product, onEdit, onDelete, onToggleStatus }) => {
   };
 
   return (
-    <div className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+    <div className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full">
       {/* Product Image */}
-      <div className="relative h-48 bg-muted">
+      <div className="relative h-56 bg-muted flex-shrink-0">
         {product.images && product.images.length > 0 ? (
           <img
             src={product.images[0].url}
@@ -75,13 +75,13 @@ const ProductCard = ({ product, onEdit, onDelete, onToggleStatus }) => {
       </div>
 
       {/* Product Info */}
-      <div className="p-4">
+      <div className="p-4 flex-1 flex flex-col">
         {/* Name and Brand */}
         <div className="mb-2">
-          <h3 className="font-semibold text-foreground line-clamp-1 mb-1">
+          <h3 className="font-semibold text-foreground line-clamp-2 mb-1 min-h-[3rem]" title={product.name}>
             {product.name}
           </h3>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground truncate" title={product.brand}>
             {product.brand}
           </p>
         </div>
@@ -111,7 +111,7 @@ const ProductCard = ({ product, onEdit, onDelete, onToggleStatus }) => {
         {/* Category and Stock */}
         <div className="flex items-center justify-between mb-3">
           <span className="text-xs px-2 py-1 bg-muted rounded-full">
-            {product.category}
+            {typeof product.category === 'object' ? product.category?.name || 'Uncategorized' : product.category || 'Uncategorized'}
           </span>
           <span className={`text-xs font-medium ${getStockStatusColor(product.stockStatus)}`}>
             {getStockStatusText(product.stockStatus)} ({product.stockCount || 0})
@@ -163,10 +163,10 @@ const ProductCard = ({ product, onEdit, onDelete, onToggleStatus }) => {
             <div className="flex flex-wrap gap-1">
               {product.sections.map((section, index) => (
                 <span
-                  key={section._id}
+                  key={typeof section === 'object' ? section._id : index}
                   className="text-xs px-2 py-1 bg-primary/10 text-primary rounded"
                 >
-                  {section.title}
+                  {typeof section === 'object' ? section.title || section.name : section}
                 </span>
               ))}
             </div>
@@ -174,36 +174,47 @@ const ProductCard = ({ product, onEdit, onDelete, onToggleStatus }) => {
         )}
 
         {/* Actions */}
-        <div className="flex items-center gap-2 pt-3 border-t border-border">
+        <div className="mt-auto pt-3 border-t border-border">
+          <div className="flex items-center gap-2 mb-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onShow}
+              className="flex-1"
+            >
+              <Icon name="Eye" size={14} className="mr-1" />
+              Show
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onEdit(product)}
+              className="flex-1"
+            >
+              <Icon name="Edit" size={14} className="mr-1" />
+              Edit
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onDelete(product._id)}
+              className="text-error hover:text-error hover:bg-error/10"
+            >
+              <Icon name="Trash2" size={14} />
+            </Button>
+          </div>
           <Button
-            variant="outline"
+            variant={product.isActive ? 'outline' : 'default'}
             size="sm"
             onClick={() => onToggleStatus(product._id)}
-            className="flex-1"
+            className="w-full"
           >
             <Icon 
               name={product.isActive ? 'EyeOff' : 'Eye'} 
               size={14} 
               className="mr-1" 
             />
-            {product.isActive ? 'Hide' : 'Show'}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onEdit(product)}
-            className="flex-1"
-          >
-            <Icon name="Edit" size={14} className="mr-1" />
-            Edit
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onDelete(product._id)}
-            className="text-error hover:text-error hover:bg-error/10"
-          >
-            <Icon name="Trash2" size={14} />
+            {product.isActive ? 'Deactivate' : 'Activate'}
           </Button>
         </div>
       </div>

@@ -37,16 +37,28 @@ const server = http.createServer(app);
 // app.use(helmet());
 app.use(compression());
 
-// Rate limiting
+// Rate limiting — relaxed in dev to avoid blocking active testing.
+// In production, tighten this (or restore to 100) before deploying.
+const isProd = process.env.NODE_ENV === 'production';
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  max: isProd ? 200 : 5000,
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/', limiter);
 
 // CORS configuration
-app.use(cors());
+const corsOptions = {
+  origin: ['http://localhost:4029', 'http://localhost:3000', 'http://localhost:5173'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 86400 // 24 hours
+};
+app.use(cors(corsOptions));
 
 // Body parser middleware
 app.use(express.json({ limit: '10mb' }));
@@ -74,13 +86,17 @@ app.use('/api/products', productRoutes);
 app.use('/api/sections', sectionRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/upload', auth, uploadRoutes);
-app.use('/api/messages', auth, messageRoutes);
+app.use('/api/messages', messageRoutes);
 app.use('/api/notifications', auth, notificationRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/pages', pageRoutes);
 app.use('/api/seed', seedRoutes);
+app.use('/api/enquiries', require('./routes/enquiries'));
 app.use('/api/banners', bannerRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/contact', require('./routes/contact'));
+app.use('/api/settings', require('./routes/settings'));
+app.use('/api/posters', require('./routes/posters'));
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ 

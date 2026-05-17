@@ -2,87 +2,82 @@ const express = require('express');
 const router = express.Router();
 const Message = require('../models/Message');
 const User = require('../models/User');
-const { auth } = require('../middleware/auth');
 const mongoose = require('mongoose');
+const { auth } = require('../middleware/auth');
+
 
 // Get conversations list (customers who have chatted with admin) with last message
 // GET /api/messages/conversations/list
 router.get('/conversations/list', auth, async (req, res) => {
   try {
     const currentUserId = new mongoose.Types.ObjectId(req.user.id);
+    const isAdmin = req.user.role === 'admin';
 
-    // For admin: show customers (non-admin)
-    // For customer: show only admin
-    const roleMatch =
-      req.user.role === 'admin'
-        ? { 'userDetails.role': { $ne: 'admin' } }
-        : { 'userDetails.role': 'admin' };
+    // Get unique user IDs who have chatted with current user
+    const messages = await Message.find({
+      $or: [
+        { senderId: currentUserId },
+        { recipientId: currentUserId }
+      ]
+    })
+    .sort({ createdAt: -1 })
+    .limit(1000) // Reasonable limit
+    .lean();
 
-    const conversations = await Message.aggregate([
-      {
-        $match: {
-          $or: [
-            { senderId: currentUserId },
-            { recipientId: currentUserId }
-          ]
-        }
-      },
-      { $sort: { createdAt: -1 } },
-      {
-        $group: {
-          _id: {
-            $cond: [
-              { $eq: ['$senderId', currentUserId] },
-              '$recipientId',
-              '$senderId'
-            ]
-          },
-          lastMessage: { $first: '$$ROOT' }
-        }
-      },
-      {
-        $lookup: {
-          from: 'users',
-          localField: '_id',
-          foreignField: '_id',
-          as: 'userDetails'
-        }
-      },
-      { $unwind: '$userDetails' },
-      {
-        // Apply role-based filter depending on current user
-        $match: roleMatch
-      },
-      {
-        $project: {
-          _id: 0,
-          userId: '$userDetails._id',
-          name: '$userDetails.name',
-          role: '$userDetails.role',
-          avatar: '$userDetails.avatar',
-          email: '$userDetails.email',
-          lastMessage: {
-            _id: '$lastMessage._id',
-            message: '$lastMessage.message',
-            senderId: '$lastMessage.senderId',
-            recipientId: '$lastMessage.recipientId',
-            type: '$lastMessage.type',
-            createdAt: '$lastMessage.createdAt',
-            read: '$lastMessage.read'
-          }
-        }
+    // Group by other user
+    const conversationMap = new Map();
+    
+    for (const msg of messages) {
+      const otherUserId = msg.senderId.equals(currentUserId) 
+        ? msg.recipientId.toString() 
+        : msg.senderId.toString();
+      
+      if (!conversationMap.has(otherUserId)) {
+        conversationMap.set(otherUserId, {
+          userId: otherUserId,
+          lastMessage: msg,
+          unreadCount: 0
+        });
       }
-    ]);
-
-    // Per-conversation unread count (messages from that user to admin that are unread)
-    for (let conv of conversations) {
-      const unreadCount = await Message.countDocuments({
-        senderId: conv.userId,
-        recipientId: req.user.id,
-        read: false
-      });
-      conv.unreadCount = unreadCount;
+      
+      // Count unread messages (from other user to current user)
+      if (!msg.read && msg.recipientId.equals(currentUserId)) {
+        conversationMap.get(otherUserId).unreadCount++;
+      }
     }
+
+    // Get user details for all conversations
+    const userIds = Array.from(conversationMap.keys()).map(id => new mongoose.Types.ObjectId(id));
+    const users = await User.find({ _id: { $in: userIds } })
+      .select('_id name email avatar role')
+      .lean();
+
+    // Build conversations array
+    const conversations = users
+      .filter(user => {
+        // For admin: show non-admin users, for users: show admin
+        if (isAdmin) {
+          return user.role !== 'admin';
+        } else {
+          return user.role === 'admin';
+        }
+      })
+      .map(user => {
+        const conv = conversationMap.get(user._id.toString());
+        return {
+          userId: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          avatar: user.avatar,
+          lastMessage: conv.lastMessage,
+          unreadCount: conv.unreadCount
+        };
+      })
+      .sort((a, b) => {
+        // Sort by last message time
+        return new Date(b.lastMessage.createdAt) - new Date(a.lastMessage.createdAt);
+      });
 
     res.json({ success: true, data: conversations });
   } catch (error) {
@@ -96,76 +91,45 @@ router.get('/conversations/list', auth, async (req, res) => {
 router.get('/conversations/:userId', auth, async (req, res) => {
   try {
     const otherUserId = req.params.userId;
+    const currentUserId = req.user.id;
 
     if (!mongoose.Types.ObjectId.isValid(otherUserId)) {
       return res.status(400).json({ success: false, message: 'Invalid user ID' });
     }
 
-    const conversations = await Message.aggregate([
-      {
-        $match: {
-          $or: [
-            {
-              senderId: new mongoose.Types.ObjectId(otherUserId),
-              recipientId: new mongoose.Types.ObjectId(req.user.id)
-            },
-            {
-              senderId: new mongoose.Types.ObjectId(req.user.id),
-              recipientId: new mongoose.Types.ObjectId(otherUserId)
-            }
-          ]
+    // Simple query with populate - much faster than aggregation
+    const messages = await Message.find({
+      $or: [
+        {
+          senderId: new mongoose.Types.ObjectId(otherUserId),
+          recipientId: new mongoose.Types.ObjectId(currentUserId)
+        },
+        {
+          senderId: new mongoose.Types.ObjectId(currentUserId),
+          recipientId: new mongoose.Types.ObjectId(otherUserId)
         }
-      },
-      { $sort: { createdAt: -1 } },
-      { $skip: 0 },
-      { $limit: 20 },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'senderId',
-          foreignField: '_id',
-          as: 'sender'
-        }
-      },
-      { $unwind: '$sender' },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'recipientId',
-          foreignField: '_id',
-          as: 'recipient'
-        }
-      },
-      { $unwind: '$recipient' },
-      {
-        $project: {
-          _id: 1,
-          message: 1,
-          type: 1,
-          read: 1,
-          createdAt: 1,
-          senderId: 1,
-          recipientId: 1,
-          sender: {
-            _id: '$sender._id',
-            name: '$sender.name',
-            email: '$sender.email',
-            avatar: '$sender.avatar',
-            role: '$sender.role'
-          },
-          recipient: {
-            _id: '$recipient._id',
-            name: '$recipient.name',
-            email: '$recipient.email',
-            avatar: '$recipient.avatar',
-            role: '$recipient.role'
-          }
-        }
-      },
-      { $sort: { createdAt: 1 } }
-    ]);
+      ]
+    })
+    .populate('senderId', 'name email avatar role')
+    .populate('recipientId', 'name email avatar role')
+    .sort({ createdAt: 1 }) // Ascending order (oldest first)
+    .limit(100) // Increased limit
+    .lean(); // Convert to plain JS objects for better performance
 
-    res.json({ success: true, data: conversations });
+    // Transform to match expected format
+    const formattedMessages = messages.map(msg => ({
+      _id: msg._id,
+      message: msg.message,
+      type: msg.type,
+      read: msg.read,
+      createdAt: msg.createdAt,
+      senderId: msg.senderId?._id || msg.senderId,
+      recipientId: msg.recipientId?._id || msg.recipientId,
+      sender: msg.senderId,
+      recipient: msg.recipientId
+    }));
+
+    res.json({ success: true, data: formattedMessages });
   } catch (error) {
     console.error('Error in GET /conversations/:userId', error);
     res.status(500).json({ success: false, message: error.message });
@@ -198,13 +162,6 @@ router.post('/send', auth, async (req, res) => {
 
     await newMessage.save();
 
-    try {
-      const socketIO = require('../socket').getIO();
-      socketIO.to(recipientId).emit('new_message', newMessage);
-    } catch (err) {
-      console.error('Socket notification error:', err);
-    }
-
     res.json({ success: true, data: newMessage });
   } catch (error) {
     console.error('Error in POST /send', error);
@@ -217,15 +174,28 @@ router.post('/send', auth, async (req, res) => {
 router.put('/read/:senderId', auth, async (req, res) => {
   try {
     const senderId = req.params.senderId;
+    
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(senderId)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid sender ID format' 
+      });
+    }
 
     const result = await Message.updateMany(
-      { senderId, recipientId: req.user.id, read: false },
+      { 
+        senderId: new mongoose.Types.ObjectId(senderId), 
+        recipientId: new mongoose.Types.ObjectId(req.user.id), 
+        read: false 
+      },
       { read: true, readAt: new Date() }
     );
 
     res.json({
       success: true,
-      message: `Marked ${result.modifiedCount || result.nModified} messages as read`
+      count: result.modifiedCount || result.nModified || 0,
+      message: `Marked ${result.modifiedCount || result.nModified || 0} messages as read`
     });
   } catch (error) {
     console.error('Error in PUT /read/:senderId', error);
@@ -248,7 +218,5 @@ router.get('/unread/count', auth, async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
-
-// (Optional) Delete / soft delete routes left as in your original if needed...
 
 module.exports = router;
