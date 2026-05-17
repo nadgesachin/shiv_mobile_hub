@@ -24,15 +24,7 @@ const ServiceCard = ({ service, viewMode = 'grid' }) => {
   if (viewMode === 'list') {
     return (
       <>
-<<<<<<< HEAD
-<<<<<<< HEAD
-        <Link to={`/services-hub/${service._id || service.id}`} className="flex flex-col sm:flex-row items-stretch bg-card rounded-xl border border-border p-4 gap-4 shadow-sm hover:shadow-md transition-smooth group relative overflow-hidden">
-=======
         <div className="flex flex-col sm:flex-row items-stretch bg-card rounded-xl border border-border p-4 gap-4 shadow-sm hover:shadow-md transition-smooth group relative overflow-hidden">
->>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
-=======
-        <div className="flex flex-col sm:flex-row items-stretch bg-card rounded-xl border border-border p-4 gap-4 shadow-sm hover:shadow-md transition-smooth group relative overflow-hidden">
->>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
         {popular && (
           <div className="absolute top-0 right-0 bg-accent text-accent-foreground text-xs font-semibold px-3 py-1 rounded-bl-lg">
             Popular
@@ -79,19 +71,7 @@ const ServiceCard = ({ service, viewMode = 'grid' }) => {
               size="sm"
               iconName="Calendar"
               iconPosition="left"
-<<<<<<< HEAD
-<<<<<<< HEAD
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setShowEnquiryModal(true);
-              }}
-=======
               onClick={() => setShowEnquiryModal(true)}
->>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
-=======
-              onClick={() => setShowEnquiryModal(true)}
->>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
             >
               Book Now
             </Button>
@@ -104,15 +84,7 @@ const ServiceCard = ({ service, viewMode = 'grid' }) => {
             )}
           </div>
         </div>
-<<<<<<< HEAD
-<<<<<<< HEAD
-        </Link>
-=======
         </div>
->>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
-=======
-        </div>
->>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
         
         {showEnquiryModal && (
           <ServiceEnquiryModal 
@@ -127,15 +99,7 @@ const ServiceCard = ({ service, viewMode = 'grid' }) => {
   // Grid view (default)
   return (
     <>
-<<<<<<< HEAD
-<<<<<<< HEAD
-      <Link to={`/services-hub/${service._id || service.id}`} className="bg-card rounded-xl border border-border p-5 hover:shadow-md transition-smooth group relative overflow-hidden flex flex-col">
-=======
       <div className="bg-card rounded-xl border border-border p-5 hover:shadow-md transition-smooth group relative overflow-hidden flex flex-col">
->>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
-=======
-      <div className="bg-card rounded-xl border border-border p-5 hover:shadow-md transition-smooth group relative overflow-hidden flex flex-col">
->>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
       {popular && (
         <div className="absolute top-0 right-0 bg-accent text-accent-foreground text-xs font-semibold px-3 py-1 rounded-bl-lg">
           Popular
@@ -180,19 +144,7 @@ const ServiceCard = ({ service, viewMode = 'grid' }) => {
           fullWidth
           iconName="Calendar"
           iconPosition="left"
-<<<<<<< HEAD
-<<<<<<< HEAD
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setShowEnquiryModal(true);
-          }}
-=======
           onClick={() => setShowEnquiryModal(true)}
->>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
-=======
-          onClick={() => setShowEnquiryModal(true)}
->>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
         >
           Book Now
         </Button>
@@ -204,14 +156,7 @@ const ServiceCard = ({ service, viewMode = 'grid' }) => {
           </Link>
         )}
       </div>
-<<<<<<< HEAD
-    </Link>
-=======
     </div>
-<<<<<<< HEAD
->>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
-=======
->>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
 
     {showEnquiryModal && (
       <ServiceEnquiryModal 

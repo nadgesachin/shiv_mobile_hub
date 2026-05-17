@@ -36,15 +36,7 @@ const ServiceEnquiryModal = ({ service, onClose }) => {
     openChatWithLink(
       {
         name: service.name,
-<<<<<<< HEAD
-<<<<<<< HEAD
-        url: `${window.location.origin}/services-hub/${service._id}`,
-=======
         url: `${window.location.origin}/services/${service._id}`,
->>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
-=======
-        url: `${window.location.origin}/services/${service._id}`,
->>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
       },
       'book'
     );
@@ -52,15 +44,7 @@ const ServiceEnquiryModal = ({ service, onClose }) => {
   };
 
   const copyServiceLink = () => {
-<<<<<<< HEAD
-<<<<<<< HEAD
-    const url = `${window.location.origin}/services-hub/${service._id}`;
-=======
     const url = `${window.location.origin}/services/${service._id}`;
->>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
-=======
-    const url = `${window.location.origin}/services/${service._id}`;
->>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
     navigator.clipboard.writeText(url)
       .then(() => Toast.success('Service link copied to clipboard'))
       .catch(() => Toast.error('Failed to copy link'));
@@ -110,15 +94,7 @@ const ServiceEnquiryModal = ({ service, onClose }) => {
       return;
     }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-    const url = encodeURIComponent(`${window.location.origin}/services-hub/${service._id}`);
-=======
     const url = encodeURIComponent(`${window.location.origin}/services/${service._id}`);
->>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
-=======
-    const url = encodeURIComponent(`${window.location.origin}/services/${service._id}`);
->>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
     const title = encodeURIComponent(`Check out ${service.name}`);
     const text = encodeURIComponent(`I found this amazing service: ${service.name}`);
     const serviceInfo = encodeURIComponent(`
@@ -126,15 +102,7 @@ const ServiceEnquiryModal = ({ service, onClose }) => {
       Description: ${service.description || 'No description available'}
       Price: ₹${service.price}
       Duration: ${service.duration || 'N/A'}
-<<<<<<< HEAD
-<<<<<<< HEAD
-      Link: ${window.location.origin}/services-hub/${service._id}
-=======
       Link: ${window.location.origin}/services/${service._id}
->>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
-=======
-      Link: ${window.location.origin}/services/${service._id}
->>>>>>> fe161fa4dac6aa43f85bcb3d5f2d9052ca30ad75
     `);
 
     let shareUrl = '';
