@@ -9,6 +9,7 @@ import { openChatWithLink } from '../../utils/ChatUtil';
 import LoginModal from '../auth/LoginModal';
 const ProductEnquiryModal = ({ product, onClose }) => {
   const { user, isAuthenticated } = useAuth();
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -17,6 +18,15 @@ const ProductEnquiryModal = ({ product, onClose }) => {
   });
   const [loading, setLoading] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+
+  // Get image URL from image object or string
+  const getImageUrl = (img) => {
+    if (!img) return '/placeholder.png';
+    return typeof img === 'string' ? img : (img.url || '/placeholder.png');
+  };
+
+  const productImages = product.images || [];
+  const currentImage = productImages[selectedImageIndex] || productImages[0];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -35,7 +45,7 @@ const ProductEnquiryModal = ({ product, onClose }) => {
     openChatWithLink(
       {
         name: product.name,
-        url: `${window.location.origin}/products/${product._id}`,
+        url: `${window.location.origin}/products-catalog/${product._id}`,
       },
       'cart' // or 'book', use whatever action label you prefer
     );
@@ -43,7 +53,7 @@ const ProductEnquiryModal = ({ product, onClose }) => {
   };
 
   const copyProductLink = () => {
-    const url = `${window.location.origin}/products/${product._id}`;
+    const url = `${window.location.origin}/products-catalog/${product._id}`;
     navigator.clipboard.writeText(url)
       .then(() => Toast.success('Product link copied to clipboard'))
       .catch(() => Toast.error('Failed to copy link'));
@@ -93,14 +103,14 @@ const ProductEnquiryModal = ({ product, onClose }) => {
       return;
     }
 
-    const url = encodeURIComponent(`${window.location.origin}/products/${product._id}`);
+    const url = encodeURIComponent(`${window.location.origin}/products-catalog/${product._id}`);
     const title = encodeURIComponent(`Check out ${product.name}`);
     const text = encodeURIComponent(`I found this amazing product: ${product.name}`);
     const productInfo = encodeURIComponent(`
       Product: ${product.name}
       Price: ₹${product.price}
       Description: ${product.description || 'No description available'}
-      Link: ${window.location.origin}/products/${product._id}
+      Link: ${window.location.origin}/products-catalog/${product._id}
     `);
 
     let shareUrl = '';
@@ -149,21 +159,54 @@ const ProductEnquiryModal = ({ product, onClose }) => {
         </div>
 
         <div className="p-4">
-          {/* Product Info */}
-          <div className="flex gap-3 mb-4 p-3 bg-muted/30 rounded-lg">
-            {product.images?.[0] && (
-              <img
-                src={product.images[0].url}
-                alt={product.images[0].alt || product.name}
-                className="w-16 h-16 object-cover rounded"
-              />
-            )}
-            <div>
-              <h3 className="font-medium">{product.name}</h3>
-              <p className="text-sm text-muted-foreground">
-                ₹{product.price.toLocaleString()}
-              </p>
+          {/* Product Info with Image Gallery */}
+          <div className="mb-4 p-3 bg-muted/30 rounded-lg">
+            <div className="flex gap-3 mb-3">
+              {/* Main Image */}
+              {productImages.length > 0 && (
+                <div className="relative w-20 h-20 rounded overflow-hidden bg-white flex-shrink-0">
+                  <img
+                    src={getImageUrl(currentImage)}
+                    alt={product.name}
+                    className="w-full h-full object-contain"
+                  />
+                  {productImages.length > 1 && (
+                    <div className="absolute bottom-0 right-0 bg-black/60 text-white px-1.5 py-0.5 text-[10px] rounded-tl">
+                      {selectedImageIndex + 1}/{productImages.length}
+                    </div>
+                  )}
+                </div>
+              )}
+              <div className="flex-1">
+                <h3 className="font-medium">{product.name}</h3>
+                <p className="text-sm text-muted-foreground">
+                  ₹{product.price.toLocaleString()}
+                </p>
+              </div>
             </div>
+
+            {/* Horizontal Thumbnail Gallery */}
+            {productImages.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto hide-scrollbar">
+                {productImages.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedImageIndex(idx)}
+                    className={`flex-shrink-0 w-12 h-12 rounded overflow-hidden border-2 transition-all ${
+                      selectedImageIndex === idx
+                        ? 'border-primary ring-2 ring-primary/20'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <img
+                      src={getImageUrl(img)}
+                      alt={`${product.name} ${idx + 1}`}
+                      className="w-full h-full object-contain"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Contact Options */}

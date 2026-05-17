@@ -86,11 +86,11 @@ router.get('/', async (req, res) => {
     if (req.query.productId) {
       filter.productId = req.query.productId;
     }
-    
+
     if (req.query.serviceId) {
       filter.serviceId = req.query.serviceId;
     }
-    
+
     if (req.query.userId) {
       filter.userId = req.query.userId;
     }

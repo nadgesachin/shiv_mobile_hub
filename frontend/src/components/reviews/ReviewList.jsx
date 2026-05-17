@@ -177,10 +177,22 @@ const ReviewList = ({ productId, serviceId }) => {
       } else if (serviceId) {
         params.serviceId = serviceId;
       }
+
+      // Prevent API call if no valid ID is provided
+      if (!params.productId && !params.serviceId) {
+        setLoading(false);
+        setHasMore(false);
+        // Optional: set an error message
+        // setError('No product or service ID provided to fetch reviews.');
+        return;
+      }
       
-      const response = await apiService.get('/api/reviews', { params });
-      
-      const { reviews: newReviews, summary: newSummary, pagination } = response.data;
+      const response = await apiService.getReviews(params);
+
+      // Backend returns { success, reviews, summary, pagination } at the root.
+      // Older versions nested under `data` — accept both.
+      const payload = response?.data && response.data.reviews ? response.data : response;
+      const { reviews: newReviews = [], summary: newSummary, pagination } = payload || {};
       
       if (pageNum === 1) {
         setReviews(newReviews);

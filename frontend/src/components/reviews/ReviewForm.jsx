@@ -77,7 +77,7 @@ const ReviewForm = ({ productId, serviceId, onReviewSubmitted }) => {
       }
       
       // Submit review to API
-      await apiService.post('/api/reviews', reviewData);
+      await apiService.createReview(reviewData);
       
       Toast.success('Review submitted successfully!');
       
@@ -109,6 +109,18 @@ const ReviewForm = ({ productId, serviceId, onReviewSubmitted }) => {
     <>
       <div className="bg-card border border-border rounded-lg p-4 mb-6">
         <h2 className="font-semibold mb-4">Write a Review</h2>
+        
+        {!isAuthenticated() && (
+          <div className="mb-4 p-3 bg-warning/10 border border-warning/20 rounded-lg flex items-start gap-2">
+            <Icon name="Info" size={18} className="text-warning mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm text-warning font-medium">Login Required</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                You need to login to submit a review. Click submit to proceed with login.
+              </p>
+            </div>
+          </div>
+        )}
         
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Rating selector */}

@@ -15,9 +15,18 @@ const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [searchQ, setSearchQ] = useState('');
 
   const location = useLocation();
   const navigate = useNavigate();
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    const term = searchQ.trim();
+    if (!term) return;
+    navigate(`/products-catalog?search=${encodeURIComponent(term)}`);
+    setIsMobileMenuOpen(false);
+  };
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
 
   useEffect(() => {
@@ -85,25 +94,39 @@ const Header = () => {
             </Interactive>
 
             {/* Desktop Search */}
-            <div className="hidden lg:flex relative mx-4 flex-1 max-w-md">
+            <form
+              onSubmit={handleSearchSubmit}
+              className="hidden lg:flex relative mx-4 flex-1 max-w-md"
+            >
               <motion.div
-                className={`flex items-center w-full ${isSearchFocused ? 'bg-white rounded-lg' : 'bg-muted rounded-md'
-                  }`}
+                className={`flex items-center w-full ${isSearchFocused ? 'bg-white rounded-lg ring-2 ring-primary/30' : 'bg-muted rounded-md'}`}
                 animate={{ width: isSearchFocused ? '110%' : '100%' }}
               >
                 <Icon name="Search" size={18} className="ml-3 text-muted-foreground" />
                 <input
                   type="text"
+                  value={searchQ}
+                  onChange={(e) => setSearchQ(e.target.value)}
                   placeholder="Search for products, services..."
-                  className="w-full bg-transparent py-2 px-3 
-        border-none outline-none ring-0 
-        focus:border-none focus:outline-none focus:ring-0 
+                  className="w-full bg-transparent py-2 px-3
+        border-none outline-none ring-0
+        focus:border-none focus:outline-none focus:ring-0
         text-sm"
                   onFocus={() => setIsSearchFocused(true)}
                   onBlur={() => setIsSearchFocused(false)}
                 />
+                {searchQ && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQ('')}
+                    aria-label="Clear search"
+                    className="px-2 text-muted-foreground hover:text-foreground"
+                  >
+                    <Icon name="X" size={14} />
+                  </button>
+                )}
               </motion.div>
-            </div>
+            </form>
 
             {/* Desktop Nav */}
             <nav className="hidden lg:flex items-center space-x-1">
@@ -119,7 +142,92 @@ const Header = () => {
                   {item.label}
                 </Link>
               ))}
-              {!isAuthenticated() && (
+              
+              {/* User Menu for Authenticated Users */}
+              {isAuthenticated() ? (
+                <div style={{ marginTop: '9px', display: 'flex' }}>
+                  {/* Notifications */}
+                  <NotificationDropdown />
+                  
+                  {/* User Profile Dropdown */}
+                  <div className="relative  ">
+                    <button
+                      onClick={() => setShowUserMenu(!showUserMenu)}
+                      className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition"
+                    >
+                      {user?.avatar ? (
+                        <img
+                          src={user.avatar}
+                          alt={user.name}
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-gradient-orange-purple flex items-center justify-center text-white font-semibold">
+                          {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                        </div>
+                      )}
+                      <span className="text-sm font-medium hidden xl:block">{user?.name || 'User'}</span>
+                      <Icon name="ChevronDown" size={16} className={`transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {/* Dropdown Menu */}
+                    <AnimatePresence>
+                      {showUserMenu && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
+                        >
+                          <div className="px-4 py-2 border-b">
+                            <p className="text-sm font-semibold">{user?.name}</p>
+                            <p className="text-xs text-gray-500">{user?.email}</p>
+                          </div>
+                          
+                          {isAdmin() && (
+                            <Link
+                              to="/admin/dashboard"
+                              className="flex items-center space-x-2 px-4 py-2 hover:bg-gray-50 text-sm"
+                              onClick={() => setShowUserMenu(false)}
+                            >
+                              <Icon name="LayoutDashboard" size={16} />
+                              <span>Admin Dashboard</span>
+                            </Link>
+                          )}
+                          
+                          <Link
+                            to="/profile"
+                            className="flex items-center space-x-2 px-4 py-2 hover:bg-gray-50 text-sm"
+                            onClick={() => setShowUserMenu(false)}
+                          >
+                            <Icon name="User" size={16} />
+                            <span>My Profile</span>
+                          </Link>
+                          
+                          <Link
+                            to="/chat"
+                            className="flex items-center space-x-2 px-4 py-2 hover:bg-gray-50 text-sm"
+                            onClick={() => setShowUserMenu(false)}
+                          >
+                            <Icon name="MessageCircle" size={16} />
+                            <span>Messages</span>
+                          </Link>
+                          
+                          <div className="border-t my-2"></div>
+                          
+                          <button
+                            onClick={handleLogout}
+                            className="flex items-center space-x-2 px-4 py-2 hover:bg-red-50 text-red-600 text-sm w-full text-left"
+                          >
+                            <Icon name="LogOut" size={16} />
+                            <span>Logout</span>
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+              ) : (
                 <>
                   <Button
                     variant="outline"
@@ -154,20 +262,34 @@ const Header = () => {
       <div className="h-16 lg:h-20" />
 
       {/* ================= MOBILE SEARCH (NOT STICKY) ================= */}
-      <div className="lg:hidden px-4 py-2 bg-white shadow-sm bg-gradient-to-r from-orange-500/10 to-purple-500/10">
+      <form
+        onSubmit={handleSearchSubmit}
+        className="lg:hidden px-4 py-2 bg-white shadow-sm bg-gradient-to-r from-orange-500/10 to-purple-500/10"
+      >
         <div className="flex items-center bg-muted rounded-full">
           <Icon name="Search" size={16} className="ml-3 text-muted-foreground" />
           <input
             type="text"
+            value={searchQ}
+            onChange={(e) => setSearchQ(e.target.value)}
             placeholder="Search products, services..."
-            className="w-full bg-transparent py-2 px-3 
-             border-none outline-none ring-0 
-             focus:border-none focus:outline-none focus:ring-0 
+            className="w-full bg-transparent py-2 px-3
+             border-none outline-none ring-0
+             focus:border-none focus:outline-none focus:ring-0
              text-sm"
           />
-
+          {searchQ && (
+            <button
+              type="button"
+              onClick={() => setSearchQ('')}
+              aria-label="Clear search"
+              className="px-3 text-muted-foreground hover:text-foreground"
+            >
+              <Icon name="X" size={14} />
+            </button>
+          )}
         </div>
-      </div>
+      </form>
 
 
       {/* ================= MOBILE MENU ================= */}
@@ -195,7 +317,65 @@ const Header = () => {
                     {item.label}
                   </Link>
                 ))}
-                {!isAuthenticated() && (
+                {isAuthenticated() ? (
+                  <>
+                    <div className="px-4 py-3 bg-gray-50 rounded-lg mb-2">
+                      <div className="flex items-center space-x-3">
+                        {user?.avatar ? (
+                          <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-gradient-orange-purple flex items-center justify-center text-white font-semibold">
+                            {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-semibold text-sm">{user?.name}</p>
+                          <p className="text-xs text-gray-500">{user?.email}</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {isAdmin() && (
+                      <Link
+                        to="/admin/dashboard"
+                        className="flex items-center space-x-2 px-4 py-3 rounded-lg hover:bg-orange-50"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <Icon name="LayoutDashboard" size={18} />
+                        <span>Admin Dashboard</span>
+                      </Link>
+                    )}
+                    
+                    <Link
+                      to="/profile"
+                      className="flex items-center space-x-2 px-4 py-3 rounded-lg hover:bg-orange-50"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Icon name="User" size={18} />
+                      <span>My Profile</span>
+                    </Link>
+                    
+                    <Link
+                      to="/chat"
+                      className="flex items-center space-x-2 px-4 py-3 rounded-lg hover:bg-orange-50"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Icon name="MessageCircle" size={18} />
+                      <span>Messages</span>
+                    </Link>
+                    
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="flex items-center space-x-2 px-4 py-3 rounded-lg hover:bg-red-50 text-red-600 w-full text-left mt-2"
+                    >
+                      <Icon name="LogOut" size={18} />
+                      <span>Logout</span>
+                    </button>
+                  </>
+                ) : (
                   <>
                     <Button
                       variant="outline"

@@ -24,7 +24,7 @@ const ServiceCard = ({ service, viewMode = 'grid' }) => {
   if (viewMode === 'list') {
     return (
       <>
-        <div className="flex flex-col sm:flex-row items-stretch bg-card rounded-xl border border-border p-4 gap-4 shadow-sm hover:shadow-md transition-smooth group relative overflow-hidden">
+        <Link to={`/services-hub/${service._id || service.id}`} className="flex flex-col sm:flex-row items-stretch bg-card rounded-xl border border-border p-4 gap-4 shadow-sm hover:shadow-md transition-smooth group relative overflow-hidden">
         {popular && (
           <div className="absolute top-0 right-0 bg-accent text-accent-foreground text-xs font-semibold px-3 py-1 rounded-bl-lg">
             Popular
@@ -71,7 +71,11 @@ const ServiceCard = ({ service, viewMode = 'grid' }) => {
               size="sm"
               iconName="Calendar"
               iconPosition="left"
-              onClick={() => setShowEnquiryModal(true)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowEnquiryModal(true);
+              }}
             >
               Book Now
             </Button>
@@ -84,7 +88,7 @@ const ServiceCard = ({ service, viewMode = 'grid' }) => {
             )}
           </div>
         </div>
-        </div>
+        </Link>
         
         {showEnquiryModal && (
           <ServiceEnquiryModal 
@@ -99,7 +103,7 @@ const ServiceCard = ({ service, viewMode = 'grid' }) => {
   // Grid view (default)
   return (
     <>
-      <div className="bg-card rounded-xl border border-border p-5 hover:shadow-md transition-smooth group relative overflow-hidden flex flex-col">
+      <Link to={`/services-hub/${service._id || service.id}`} className="bg-card rounded-xl border border-border p-5 hover:shadow-md transition-smooth group relative overflow-hidden flex flex-col">
       {popular && (
         <div className="absolute top-0 right-0 bg-accent text-accent-foreground text-xs font-semibold px-3 py-1 rounded-bl-lg">
           Popular
@@ -144,7 +148,11 @@ const ServiceCard = ({ service, viewMode = 'grid' }) => {
           fullWidth
           iconName="Calendar"
           iconPosition="left"
-          onClick={() => setShowEnquiryModal(true)}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setShowEnquiryModal(true);
+          }}
         >
           Book Now
         </Button>
@@ -156,7 +164,7 @@ const ServiceCard = ({ service, viewMode = 'grid' }) => {
           </Link>
         )}
       </div>
-    </div>
+    </Link>
 
     {showEnquiryModal && (
       <ServiceEnquiryModal 

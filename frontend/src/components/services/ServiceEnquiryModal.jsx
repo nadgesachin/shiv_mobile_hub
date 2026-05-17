@@ -36,7 +36,7 @@ const ServiceEnquiryModal = ({ service, onClose }) => {
     openChatWithLink(
       {
         name: service.name,
-        url: `${window.location.origin}/services/${service._id}`,
+        url: `${window.location.origin}/services-hub/${service._id}`,
       },
       'book'
     );
@@ -44,7 +44,7 @@ const ServiceEnquiryModal = ({ service, onClose }) => {
   };
 
   const copyServiceLink = () => {
-    const url = `${window.location.origin}/services/${service._id}`;
+    const url = `${window.location.origin}/services-hub/${service._id}`;
     navigator.clipboard.writeText(url)
       .then(() => Toast.success('Service link copied to clipboard'))
       .catch(() => Toast.error('Failed to copy link'));
@@ -94,7 +94,7 @@ const ServiceEnquiryModal = ({ service, onClose }) => {
       return;
     }
 
-    const url = encodeURIComponent(`${window.location.origin}/services/${service._id}`);
+    const url = encodeURIComponent(`${window.location.origin}/services-hub/${service._id}`);
     const title = encodeURIComponent(`Check out ${service.name}`);
     const text = encodeURIComponent(`I found this amazing service: ${service.name}`);
     const serviceInfo = encodeURIComponent(`
@@ -102,7 +102,7 @@ const ServiceEnquiryModal = ({ service, onClose }) => {
       Description: ${service.description || 'No description available'}
       Price: ₹${service.price}
       Duration: ${service.duration || 'N/A'}
-      Link: ${window.location.origin}/services/${service._id}
+      Link: ${window.location.origin}/services-hub/${service._id}
     `);
 
     let shareUrl = '';
