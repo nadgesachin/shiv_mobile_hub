@@ -6,21 +6,23 @@ import { useAuth } from '../../contexts/AuthContext';
 const AdminGuard = ({ children }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const { isAuthenticated, isAdmin } = useAuth();
+  const { isAuthenticated, isAdmin, isLoading } = useAuth();
 
   useEffect(() => {
+    if (isLoading) return; // wait for AuthContext to finish loading user
+
     const check = async () => {
       try {
         if (!isAuthenticated()) {
           navigate('/login');
           return;
         }
-        
+
         if (!isAdmin()) {
           navigate('/');
           return;
         }
-        
+
         // Verify with the server that the user is still an admin
         const res = await apiService.getCurrentUser();
         if (res.data.user.role !== 'admin') {
@@ -34,9 +36,9 @@ const AdminGuard = ({ children }) => {
       }
     };
     check();
-  }, [navigate, isAuthenticated, isAdmin]);
+  }, [navigate, isAuthenticated, isAdmin, isLoading]);
 
-  if (loading) return <div className="p-6 text-center">Checking access…</div>;
+  if (isLoading || loading) return <div className="p-6 text-center">Checking access…</div>;
   return children;
 };
 
