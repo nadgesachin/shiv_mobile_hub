@@ -68,8 +68,6 @@ router.get('/', async (req, res) => {
     // Build filter
     const filter = { status: 'approved' };
 
-    // If a caller passes an invalid ObjectId (e.g. "general"), return an empty
-    // result set instead of throwing a CastError 500.
     const isObjectId = (v) => mongoose.Types.ObjectId.isValid(v);
     const invalidIdQuery =
       (req.query.productId && !isObjectId(req.query.productId)) ||
